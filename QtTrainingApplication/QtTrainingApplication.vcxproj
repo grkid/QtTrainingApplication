@@ -5,9 +5,17 @@
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -26,19 +34,24 @@
     <ConfigurationType>Application</ConfigurationType>
     <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt_defaults.props')">
     <Import Project="$(QtMsBuild)\qt_defaults.props" />
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|Win32'" Label="QtSettings">
     <QtInstall>5.14.2_msvc2017</QtInstall>
-    <QtModules>core;opengl;gui;widgets</QtModules>
+    <QtModules>3danimation;3dcore;3dextras;3dinput;3dlogic;3drender;core;gui;opengl;openglextensions;widgets</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|Win32'" Label="QtSettings">
     <QtInstall>5.14.2_msvc2017</QtInstall>
-    <QtModules>
-    </QtModules>
+    <QtModules>gui;opengl;openglextensions</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
   </PropertyGroup>
   <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')">
@@ -56,9 +69,15 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|Win32'">
+    <LibraryPath>C:\Program Files %28x86%29\Windows Kits\10\Lib\10.0.18362.0\um\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|Win32'">
   </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Link>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|Win32'" Label="Configuration">
     <ClCompile>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
@@ -77,27 +96,61 @@
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DebugInformationFormat>None</DebugInformationFormat>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="CoreFunctionWidget.cpp" />
+    <ClCompile Include="backgroundImage.cpp" />
+    <ClCompile Include="camera.cpp" />
+    <ClCompile Include="DirectionalLight.cpp" />
+    <ClCompile Include="LanguageAdapter.cpp" />
+    <ClCompile Include="LightController.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MainWindow.cpp" />
+    <ClCompile Include="mesh.cpp" />
+    <ClCompile Include="model.cpp" />
+    <ClCompile Include="ModelController.cpp" />
     <ClCompile Include="widget.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <QtMoc Include="CoreFunctionWidget.h" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="widget.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="stb_image.h" />
+    <ClInclude Include="backgroundImage.h" />
+    <ClInclude Include="camera.h" />
+    <QtMoc Include="MainWindow.h" />
+    <ClInclude Include="DirectionalLight.h" />
+    <ClInclude Include="LanguageAdapter.h" />
+    <QtMoc Include="LightController.h" />
+    <ClInclude Include="mesh.h" />
+    <ClInclude Include="model.h" />
+    <QtMoc Include="ModelController.h" />
+    <ClInclude Include="OpenGLSharedInfo.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assimp-vc140-mt.dll" />
+    <None Include="assimp-vc140-mt.exp" />
+    <None Include="assimp-vc140-mt.ilk" />
+    <None Include="assimp-vc140-mt.pdb" />
+    <None Include="shader\1.glsl" />
+    <None Include="shader\2.glsl" />
+    <None Include="shader\background.frag" />
+    <None Include="shader\background.vert" />
+    <None Include="shader\lamp.frag" />
+    <None Include="shader\model.frag" />
+    <None Include="shader\model.vert" />
+    <None Include="shader\shadow.frag" />
+    <None Include="shader\shadow.vert" />
+    <None Include="shader\triangle.frag" />
+    <None Include="shader\triangle.vert" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="assimp-vc140-mt.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

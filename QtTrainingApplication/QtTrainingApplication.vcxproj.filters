@@ -23,27 +23,117 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CoreFunctionWidget.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="widget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="model.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="backgroundImage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MainWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ModelController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LanguageAdapter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectionalLight.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LightController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="CoreFunctionWidget.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="widget.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="MainWindow.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ModelController.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="LightController.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="stb_image.h">
+    <ClInclude Include="camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="mesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="backgroundImage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OpenGLSharedInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LanguageAdapter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectionalLight.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assimp-vc140-mt.dll" />
+    <None Include="assimp-vc140-mt.exp" />
+    <None Include="assimp-vc140-mt.ilk" />
+    <None Include="assimp-vc140-mt.pdb" />
+    <None Include="shader\1.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shader\2.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shader\background.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shader\background.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shader\lamp.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shader\model.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shader\model.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shader\triangle.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shader\triangle.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shader\shadow.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shader\shadow.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="assimp-vc140-mt.lib" />
   </ItemGroup>
 </Project>

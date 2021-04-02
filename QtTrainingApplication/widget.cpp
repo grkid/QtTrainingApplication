@@ -1,189 +1,393 @@
 #include "widget.h"
-#include <QtMath>
+#include "MainWindow.h"
 
-Widget::Widget(QWidget *parent)
-	: QOpenGLWidget(parent)
-	, VBO(QOpenGLBuffer::VertexBuffer)
-	, texture(QOpenGLTexture::Target2D)
-	, texture1(QOpenGLTexture::Target2D)
-	, yaw(0.0)
-	, pitch(0.0)
-	, sensitivity(0.01)
-	, cameraPos(-5.0f, 0.0f, 0.0f)
-	, cameraTarget(0.0f, 0.0f, 0.0f)
-	, cameraDirection(cos(yaw)* cos(pitch), sin(pitch), sin(yaw)* cos(pitch))
-	, cameraRight(QVector3D::crossProduct({ 0.0f,1.0f,0.0f }, cameraDirection))
-	, cameraUp(QVector3D::crossProduct(cameraDirection, cameraRight))
+Widget::Widget(OpenGLSharedInfo& info,QWidget* parent)
+    : QOpenGLWidget(parent)
+    , camera(this)
+    , info(info)
 {
-	vertices = {
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
 
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    timer.setInterval(18);
+    connect(&timer, &QTimer::timeout, this, static_cast<void (Widget::*)()>(&Widget::update));
+    timer.start();
 
-		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    setMinimumSize(QSize(480, 360));
+    
+    // 抗锯齿
+    QSurfaceFormat format;
+    format.setSamples(16);
+    setFormat(format);
 
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
-	};
-
-	cubePositions = {
-	  { 0.0f,  0.0f,  0.0f  },
-	  { 2.0f,  5.0f, -15.0f },
-	  {-1.5f, -2.2f, -2.5f  },
-	  {-3.8f, -2.0f, -12.3f },
-	  { 2.4f, -0.4f, -3.5f  },
-	  {-1.7f,  3.0f, -7.5f  },
-	  { 1.3f, -2.0f, -2.5f  },
-	  { 1.5f,  2.0f, -2.5f  },
-	  { 1.5f,  0.2f, -1.5f  },
-	  {-1.3f,  1.0f, -1.5f  },
-	};
-
-	timer.setInterval(18);
-	connect(&timer, &QTimer::timeout, this, static_cast<void (Widget::*)()>(&Widget::update));
-	timer.start();
-
-	setMouseTracking(true);         //开启鼠标追踪：Qt默认不会实时监控鼠标移动
+    //帧生成时间
+    frameTimer = new QTimer(this);
+    frameTimer->setTimerType(Qt::PreciseTimer);
+    connect(frameTimer, &QTimer::timeout, [=]() {updateFrameTime(); });
+    frameTimer->start(frameTimerInterval);
 }
-
 Widget::~Widget()
 {
+    if(back)
+        delete back;
+    for (auto a : models) {
+        delete a;
+    }
+    if (frameTimer)
+        delete frameTimer;
 }
 
 void Widget::initializeGL()
 {
-	this->initializeOpenGLFunctions();        //初始化opengl函数
-	if (!shaderProgram.addShaderFromSourceFile(QOpenGLShader::Vertex, "./shader/1.glsl")) {     //添加并编译顶点着色器
-		qDebug() << "ERROR:" << shaderProgram.log();    //如果编译出错,打印报错信息
-	}
-	if (!shaderProgram.addShaderFromSourceFile(QOpenGLShader::Fragment, "./shader/2.glsl")) {   //添加并编译片段着色器
-		qDebug() << "ERROR:" << shaderProgram.log();    //如果编译出错,打印报错信息
-	}
-	if (!shaderProgram.link()) {                      //链接着色器
-		qDebug() << "ERROR:" << shaderProgram.log();    //如果链接出错,打印报错信息
-	}
+    initializeOpenGLFunctions();
 
-	QOpenGLVertexArrayObject::Binder{ &VAO };
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    if (!shaderProgram.addShaderFromSourceFile(QOpenGLShader::Vertex, "shader/model.vert")) {
+        qDebug() << "ERROR:" << shaderProgram.log();
+    }
+    if (!shaderProgram.addShaderFromSourceFile(QOpenGLShader::Fragment, "shader/model.frag")) {
+        qDebug() << "ERROR:" << shaderProgram.log();
+    }
+    if (!shaderProgram.link()) {
+        qDebug() << "ERROR:" << shaderProgram.log();
+    }
 
-	VBO.create();       //生成VBO对象
-	VBO.bind();         //将VBO绑定到当前的顶点缓冲对象（QOpenGLBuffer::VertexBuffer）中
+    if (!shadowShader.addShaderFromSourceFile(QOpenGLShader::Vertex, "shader/shadow.vert")) {
+        qDebug() << "ERROR:" << shadowShader.log();
+    }
+    if (!shadowShader.addShaderFromSourceFile(QOpenGLShader::Fragment, "shader/shadow.frag")) {
+        qDebug() << "ERROR:" << shadowShader.log();
+    }
+    if (!shadowShader.link()) {
+        qDebug() << "ERROR:" << shadowShader.log();
+    }
 
-	//将顶点数据分配到VBO中，第一个参数为数据指针，第二个参数为数据的字节长度
-	VBO.allocate(vertices.data(), sizeof(float)*vertices.size());
+    shaders.append(&shaderProgram);
+    shaders.append(&shadowShader);
 
-	texture.create();
-	texture.setData(QImage("./image/container.jpg").mirrored());
-	texture.setMinMagFilters(QOpenGLTexture::LinearMipMapLinear, QOpenGLTexture::Linear);
-	texture.setWrapMode(QOpenGLTexture::DirectionS, QOpenGLTexture::Repeat);
-	texture.setWrapMode(QOpenGLTexture::DirectionT, QOpenGLTexture::Repeat);
+    directionalLight = new DirectionalLight();
 
-	texture1.create();
-	texture1.setData(QImage("./image/awesomeface.png").mirrored());
-	texture1.setMinMagFilters(QOpenGLTexture::LinearMipMapLinear, QOpenGLTexture::Linear);
-	texture1.setWrapMode(QOpenGLTexture::DirectionS, QOpenGLTexture::Repeat);
-	texture1.setWrapMode(QOpenGLTexture::DirectionT, QOpenGLTexture::Repeat);
 
-	//设置顶点解析格式，并启用顶点
-	shaderProgram.setAttributeBuffer("aPos", GL_FLOAT, 0, 3, sizeof(GLfloat) * 5);
-	shaderProgram.enableAttributeArray("aPos");
-	shaderProgram.setAttributeBuffer("aTexCoord", GL_FLOAT, sizeof(GLfloat) * 3, 2, sizeof(GLfloat) * 5);
-	shaderProgram.enableAttributeArray("aTexCoord");
+    for (int i=0,size=info.modelPaths.size();i<size;i++)
+    {
+        Model* newModel = Model::createModel(info.modelPaths[i], context());
+        if (i<info.modelTransforms.size()) {
+            newModel->setTransform(info.modelTransforms[i]);
+        }
+        models.append(newModel);
+        modelMap.insert(newModel->getName(), newModel);
+    }
 
-	this->glEnable(GL_DEPTH_TEST);
-	this->setCursor(Qt::BlankCursor);       //隐藏鼠标光标
-	QCursor::setPos(geometry().center());   //设置鼠标位置为窗口矩形区域的中心
+    if (info.backgroundPath != "")
+    {
+        back = new BackgroundImage(info.backgroundPath, this);
+    }
+
+    glEnable(GL_DEPTH_TEST);
+
+    //WARNING: 开启BLEND会引起一系列问题！！！
+    //包括但不限于无法渲染到RGB texture！！！
+    //TODO
+    /*glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);*/
+
+    camera.init();
+
+    genFrameBufferVSM();
+}
+
+void Widget::paintGL()
+{  
+    //更新帧数
+    frameCount++;
+
+    //第一轮绘制
+    int viewport[4];
+    glGetIntegerv(GL_VIEWPORT, viewport);
+    shadowPassVSM();
+
+    //第二轮绘制
+    glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    setUniformValuesModel();
+    if (back)
+        back->draw();
+     for (auto a : models) {
+        a->draw(&shaderProgram);
+    }
 }
 
 void Widget::resizeGL(int w, int h)
 {
-	this->glViewport(0, 0, w, h);                //定义视口区域
+    glViewport(0, 0, w, h);
 }
 
-void Widget::paintGL()
+bool Widget::event(QEvent* e) {
+    //camera.handle(e);
+    return QWidget::event(e);
+}
+
+void Widget::setUniformValuesShadow()
 {
-	this->glClearColor(0.0f, 0.0f, 0.0f, 1.0f);  //设置清屏颜色
-	this->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);       //清除颜色缓存
+    QVector3D modelCentreSum;
+    for (auto item : models)
+        modelCentreSum += item->getModelCentre();
+    modelCentreSum /= models.size();
 
-
-
-	shaderProgram.bind();                     //使用shaderProgram着色程序
-	{
-
-		float time = QTime::currentTime().msecsSinceStartOfDay() / 1000.0;
-
-		QMatrix4x4 view;
-		view.lookAt(cameraPos, cameraPos + cameraDirection, cameraUp);
-		shaderProgram.setUniformValue("view", view);
-
-		QMatrix4x4 projection;
-		projection.perspective(45.0f, width() / (float)height(), 0.1f, 100.0f);
-		shaderProgram.setUniformValue("projection", projection);
-
-		texture.bind(0);                                    //将texture绑定到纹理单元0
-		shaderProgram.setUniformValue("ourTexture", 0);      //让ourTexture从纹理单元0中获取纹理数据
-
-		texture1.bind(1);                                    //将texture绑定到纹理单元1
-		shaderProgram.setUniformValue("ourTexture1", 1);      //让ourTexture从纹理单元1中获取纹理数据
-
-		QOpenGLVertexArrayObject::Binder{ &VAO };
-		
-		for (unsigned int i = 0; i < 10; i++) {
-			QMatrix4x4 model;
-			model.translate(cubePositions[i]);
-			model.rotate(180 * time + i * 20.0f, QVector3D(1.0f, 0.5f, 0.3f));
-			shaderProgram.setUniformValue("model", model);
-			this->glDrawArrays(GL_TRIANGLES, 0, 36);
-		}
-	}
+    QMatrix4x4 projection;
+    projection.ortho(-50.0f, 50.0f, -50.0f, 50.0f, nearPlane, farPlane);
+    QMatrix4x4 view;
+    view.lookAt(directionalLight->getDirection() * 5+modelCentreSum, QVector3D(0, 0, 0)+modelCentreSum, QVector3D(0, 1, 0));
+    shadowShader.bind();
+    shadowShader.setUniformValue("projection", projection);
+    shadowShader.setUniformValue("view", view);
+    shadowShader.setUniformValue("viewPos", camera.getCameraPos());
+    shadowShader.setUniformValue("nearPlane", nearPlane);
+    shadowShader.setUniformValue("farPlane", farPlane);
+    //shaderProgram.setUniformValue("isFloor", 0);
+    directionalLight->set(&shadowShader);
 }
 
-void Widget::mouseMoveEvent(QMouseEvent* event)
+void Widget::setUniformValuesModel()
 {
-	float xoffset = event->x() - rect().center().x();
-	float yoffset = rect().center().y() - event->y(); // 注意这里是相反的，因为y坐标是从底部往顶部依次增大的
-	xoffset *= sensitivity;
-	yoffset *= sensitivity;
-	yaw += xoffset;
-	pitch += yoffset;
-	if (pitch >= M_PI / 2)                          //将俯视角限制到[-90°,90°]
-		pitch = (M_PI) / 2 - 0.1;
-	if (pitch <= -M_PI / 2)
-		pitch = -(M_PI) / 2 + 0.1;
-	cameraDirection.setX(cos(yaw) * cos(pitch));
-	cameraDirection.setY(sin(pitch));
-	cameraDirection.setZ(sin(yaw) * cos(pitch));
-	QCursor::setPos(geometry().center());       //将鼠标复原到窗口中央
+    QVector3D modelCentreSum;
+    for (auto item : models)
+        modelCentreSum += item->getModelCentre();
+    modelCentreSum /= models.size();
+    //qDebug() << "model centre:" << modelCentreSum;
+
+    QMatrix4x4 projection;
+    projection.perspective(45.0f, width() / (float)height(), 0.01, 500.0f);
+    shaderProgram.bind();
+    shaderProgram.setUniformValue("projection", projection);
+    shaderProgram.setUniformValue("view", camera.getView());
+    shaderProgram.setUniformValue("viewPos", camera.getCameraPos());
+    shaderProgram.setUniformValue("nearPlane", nearPlane);
+    shaderProgram.setUniformValue("farPlane", farPlane);
+    directionalLight->set(&shaderProgram);
+
+    QMatrix4x4 lightProjection, lightView;
+    lightProjection.ortho(-50.0f, 50.0f, -50.0f, 50.0f, nearPlane, farPlane);
+    lightView.lookAt(directionalLight->getDirection() * 5+modelCentreSum, QVector3D(0, 0, 0)+modelCentreSum, QVector3D(0, 1, 0));
+    lightSpaceMatrix = lightProjection * lightView;
+    shaderProgram.setUniformValue("lightSpaceMatrix", lightSpaceMatrix);
+    shaderProgram.setUniformValue("depthMap", depthMapIndex);
 }
+
+void Widget::genFrameBufferNormal()
+{
+    //opengl tutorial 14
+    glGenFramebuffers(1, &frameBufferName);
+    glBindFramebuffer(GL_FRAMEBUFFER, frameBufferName);
+
+    glGenTextures(1, &renderedTexture);
+    glBindTexture(GL_TEXTURE_2D, renderedTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, shadowWidth, shadowHeight, 0, GL_RGB, GL_FLOAT, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glGenRenderbuffers(1, &depthrenderbuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, depthrenderbuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, shadowWidth, shadowHeight);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthrenderbuffer);
+
+    glGenTextures(1, &depthTexture);
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, shadowWidth, shadowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderedTexture, 0);
+
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthTexture, 0);
+
+    glDrawBuffers(1, drawBuffers);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        qDebug() << "GL_FRAMEBUFFER::not complete";
+}
+
+void Widget::shadowPassNormal()
+{
+    glViewport(0, 0, shadowWidth, shadowHeight);
+    glBindFramebuffer(GL_FRAMEBUFFER, frameBufferName);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    setUniformValuesShadow();
+    for (auto a : models) {
+        a->draw(&shadowShader);
+    }
+    glActiveTexture(GL_TEXTURE0 + depthMapIndex);
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
+}
+
+void Widget::genFrameBufferVSM()
+{
+    //https://github.com/Dilin71828/OpenGL_VSM/blob/master/src/OpenGL_VSM.cpp
+   /* glGenFramebuffers(1, &frameBufferName);
+    glBindFramebuffer(GL_FRAMEBUFFER, frameBufferName);
+    
+    glGenTextures(1, &renderedTexture);
+    glBindTexture(GL_TEXTURE_2D, renderedTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, shadowWidth, shadowHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+    glGenRenderbuffers(1, &depthrenderbuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, depthrenderbuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, shadowWidth, shadowHeight);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthrenderbuffer);
+
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderedTexture, 0);
+
+    GLenum DrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
+    glDrawBuffers(1, DrawBuffers);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        qDebug() << "VSM imcomplete";*/
+
+    
+    glGenFramebuffers(1, &depthFBO);
+    glGenRenderbuffers(1, &depthRBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, depthRBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, shadowWidth, shadowHeight);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRBO);
+    glEnable(GL_DEPTH_TEST);
+
+    GLfloat borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
+
+    
+    glGenTextures(1, &depthTexture);
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, shadowWidth, shadowHeight, 0, GL_RG, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, depthTexture, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glGenFramebuffers(2, varianceFBO);
+    glGenTextures(2, varianceTexture);
+
+    for (int i = 0; i < 2; i++)
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, varianceFBO[i]);
+        glBindTexture(GL_TEXTURE_2D, varianceTexture[i]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, shadowWidth, shadowHeight, 0, GL_RG, GL_FLOAT, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, varianceTexture[i], 0);
+    }
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+}
+
+void Widget::shadowPassVSM()
+{
+    glViewport(0, 0, shadowWidth, shadowHeight);
+    glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    setUniformValuesShadow();
+    for (auto a : models) {
+        a->draw(&shadowShader);
+    }
+
+    glActiveTexture(GL_TEXTURE0 + depthMapIndex);
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
+
+    /*glViewport(0, 0, shadowWidth, shadowHeight);
+    glBindFramebuffer(GL_FRAMEBUFFER, frameBufferName);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    setUniformValuesShadow();
+    for (auto a : models) {
+        a->draw(&shadowShader);
+    }
+
+    glActiveTexture(GL_TEXTURE0 + depthMapIndex);
+    glBindTexture(GL_TEXTURE_2D, renderedTexture);*/
+
+}
+
+void Widget::updateFrameTime()
+{
+    INT64 frames = frameCount.load(std::memory_order_relaxed);
+    double value = frames / (double)frameTimerInterval;
+    //qDebug() << "frame time:" << value << " avg fps:" << frames;
+    WOUT("frame time:" + QString::number(value) + " average fps:" + QString::number(frames));
+    frameCount.store(0, std::memory_order_relaxed);
+}
+
+QSize Widget::getSize()
+{
+    if (back)
+        return back->getSize();
+    return QSize(-1, -1);
+}
+
+QVector<QOpenGLShaderProgram*>& Widget::getShaders()
+{
+    return shaders;
+}
+
+void Widget::readBackground(QString path)
+{
+    back->readBackground(path);
+}
+
+void Widget::saveResult(QString path)
+{
+    QSize initialSize = this->size();
+    QSize size = back->getSize();
+    if (size.isValid())
+    {
+        resize(size);
+        QImage image = grabFramebuffer();
+        image.save(path);
+    }
+    resize(initialSize);
+}
+
+void Widget::modelTransform(QString modelName, modelOperation op, modelDirection dir)
+{
+    //TODO:修改模型名为真正的模型名
+    Model* model = modelMap.value(modelName);
+    if (!model)
+    {
+        //qDebug() << "can't find model for model name: " << modelName;
+        WOUT("can't find model for model name: "+modelName);
+        return;
+    }
+
+    model->modelTransform(op, dir);
+}
+
+void Widget::saveInfo(OpenGLSharedInfo& info)
+{
+    info.modelTransforms.clear();
+    for (auto item : models)
+    {
+        info.modelTransforms.append(item->getTransform());
+    }
+    if (info.modelPaths.size() != info.modelTransforms.size())
+    {
+        //qDebug() << "WIDGET::info size incorrect.";
+        WOUT("WIDGET::info size incorrect.");
+    }
+}
+
+//int Widget::heightForWidth(int w)
+//{
+//    if (back)
+//    {
+//        QSize size = back->getSize();
+//        double ratio = (double)size.height() / (double)size.width();
+//        return (w * ratio);
+//    }
+//    return -1;
+//}
