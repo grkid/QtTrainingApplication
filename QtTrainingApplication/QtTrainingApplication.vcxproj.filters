@@ -99,19 +99,10 @@
     <None Include="assimp-vc140-mt.exp" />
     <None Include="assimp-vc140-mt.ilk" />
     <None Include="assimp-vc140-mt.pdb" />
-    <None Include="shader\1.glsl">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="shader\2.glsl">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="shader\background.frag">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="shader\background.vert">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="shader\lamp.frag">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="shader\model.frag">
@@ -120,16 +111,16 @@
     <None Include="shader\model.vert">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="shader\triangle.frag">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="shader\triangle.vert">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="shader\shadow.frag">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="shader\shadow.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shader\variance.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shader\variance.vert">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

@@ -137,17 +137,14 @@
     <None Include="assimp-vc140-mt.exp" />
     <None Include="assimp-vc140-mt.ilk" />
     <None Include="assimp-vc140-mt.pdb" />
-    <None Include="shader\1.glsl" />
-    <None Include="shader\2.glsl" />
     <None Include="shader\background.frag" />
     <None Include="shader\background.vert" />
-    <None Include="shader\lamp.frag" />
     <None Include="shader\model.frag" />
     <None Include="shader\model.vert" />
     <None Include="shader\shadow.frag" />
     <None Include="shader\shadow.vert" />
-    <None Include="shader\triangle.frag" />
-    <None Include="shader\triangle.vert" />
+    <None Include="shader\variance.frag" />
+    <None Include="shader\variance.vert" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="assimp-vc140-mt.lib" />

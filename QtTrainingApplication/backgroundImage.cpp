@@ -10,7 +10,7 @@ void BackgroundImage::draw()
     texture.bind(textureIndex);                                    //将texture绑定到纹理单元0
 
     //debug代码，用于查看深度图
-    shaderProgram.setUniformValue("Texture", 14);      //让着色采样器ourTexture从纹理单元0中获取纹理数据
+    shaderProgram.setUniformValue("Texture", 15);      //让着色采样器ourTexture从纹理单元0中获取纹理数据
     QOpenGLVertexArrayObject::Binder{ &VAO };
     widget->context()->functions()->glDrawArrays(GL_POLYGON, 0, 4);     //使用以0开始，长度为4的顶点数据来绘制多边形
     //VAO.release();

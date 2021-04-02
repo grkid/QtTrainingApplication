@@ -39,28 +39,28 @@ public:
     // 可重入函数
     void readBackground(QString path);
     void saveResult(QString path);
-
     void modelTransform(QString modelName, modelOperation op, modelDirection dir);
-
-    DirectionalLight* directionalLight; //平行光
-
     void saveInfo(OpenGLSharedInfo& info);
-
     void updateFrameTime();
-
     QSize getSize();
 
     QVector<QOpenGLShaderProgram*>& getShaders();
+    DirectionalLight* directionalLight; //平行光
+
 private:
     QOpenGLShaderProgram shaderProgram; //主Shader
     QOpenGLShaderProgram shadowShader;//阴影shader
+    QOpenGLShaderProgram varianceShader;//VSM的滤波器Shader
+    void loadShader(QOpenGLShaderProgram& shaderProgram, QString vertPath, QString fragPath);
     //QOpenGLShaderProgram shadowShader;//阴影shader
     QVector<QOpenGLShaderProgram*> shaders;
+
     OpenGLSharedInfo& info; //需要从主窗口处拿到的信息
     BackgroundImage* back=NULL; //背景
 
     QVector<Model*> models; //模型列表，多余
     QHash<QString, Model*> modelMap;    //模型名，模型类指针的map
+
     Camera camera;  //摄像机类，基本不动
     QTimer timer;   //计时器，用于同步
 
@@ -100,6 +100,9 @@ private:
 
     void genFrameBufferVSM();
     void shadowPassVSM();
+    GLuint quadVAO;
+    GLuint quadVBO;
+    void renderQuadVSM();
 
     const float nearPlane = 0.1;
     const float farPlane = 30.0;

@@ -125,98 +125,14 @@ float computeMsmShadowIntensity(vec4 b, float fragment_depth) {
     return clamp(switch_msm.y + switch_msm.z * quotient ,0.0,1.0);
 }
 
-//moment shadow map
-
-//float momentShadowCalculation(vec4 fragPosLightSpace)
-//{
-//    vec3 projCoords=fragPosLightSpace.xyz/fragPosLightSpace.w;
-//    projCoords=projCoords*0.5+0.5;
-//    float zf=projCoords.z;
-//    float zf2=zf*zf;
-//
-//    //已经经过一个小滤波器
-//    float b1=filterShadowCalculation(fragPosLightSpace);
-//    //float b1=texture(depthMap,projCoords.xy).x;
-//    float b2=b1*b1;
-//    float b3=b1*b2;
-//    float b4=b2*b2;
-//    float alpha=0.00003;
-//
-//    float b_1,b_2,b_3,b_4;
-//    b_1=(1-alpha)*b1+0.5*alpha;
-//    b_2=(1-alpha)*b2+0.5*alpha;
-//    b_3=(1-alpha)*b3+0.5*alpha;
-//    b_4=(1-alpha)*b4+0.5*alpha;
-//
-//    //Cholesky Decomposition
-//
-//    /*
-//      1     b_1 b_2
-//    [ b_1 b_2 b_3 ] * x = [1 zf zf^2]^T
-//      b_2 b_3 b_4
-//    */
-//
-//    float a11,a12,a13,a21,a22,a23,a31,a32,a33;
-//    a11=1;a12=b_1;a13=b_2;
-//    a21=b_1;a22=b_2;a23=b_3;
-//    a31=b_2;a32=b_3;a33=b_4;
-//
-//    float l11,l21,l22,l31,l32,l33;
-//    l11=1;//sqrt(1)
-//    l21=(a21)/l11;
-//    l22=sqrt(a22-l21*l21);
-//    l31=(a31)/l11;
-//    l32=(a32-l31*l21)/l22;
-//    l33=sqrt(a33-(l31*l31+l32*l32));
-//
-//    //Ax=c
-//    float c1,c2,c3;
-//    c1=1;c2=zf;c3=zf2;
-//
-//    float y1,y2,y3,x1,x2,x3;
-//    y1=(c1)/l11;
-//    y2=(c2-l21*y1)/l22;
-//    y3=(c3-(l31*y1+l32*y2))/l33;
-//
-//    x1=(y1-(l21*y2+l31*y3))/l11;
-//    x2=(y2-(l32*y3))/l22;
-//    x3=(y3)/l33;
-//
-//    
-//    float z2,z3;
-//    float quad=sqrt(x2*x2-4*x1*x3);
-//    z2=(-x2+quad)/(2*x3);
-//    z3=(-x2-quad)/(2*x3);
-//    if(z2>z3)
-//    {
-//        float temp=z2;
-//        z2=z3;
-//        z3=temp;
-//    }
-//
-//    if(zf<=z2)
-//    {
-//        return 0.0;
-//    }
-//    else if(zf<=z3)
-//    {
-//        return (zf*z3-b_1*(zf+z3)+b_2)/((z3-z2)*(zf-z2));
-//    }
-//    else
-//    {
-//        return 1-(z2*z3-b_1*(z2+z3)+b_2)/((zf-z2)*(zf-z3));
-//    }
-//}
-
 float momentShadowCalculation(vec4 fragPosLightSpace)
 {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    projCoords = projCoords * 0.5 + 0.5;
+    projCoords = projCoords * 0.5 + 0.5;//归一化到 [0,1]
     float currentDepth = projCoords.z;
     float b=texture(depthMap,projCoords.xy).x;
     return computeMsmShadowIntensity(vec4(b,b*b,b*b*b,b*b*b*b),currentDepth);
 }
-
 float linearizeDepth(float depth){
     float z = (2.0*nearPlane*farPlane)/(farPlane+nearPlane-depth*(farPlane-nearPlane));
     return (z-nearPlane)/(farPlane-nearPlane);
@@ -224,20 +140,25 @@ float linearizeDepth(float depth){
 
 float varianceShadowCalculation(vec4 fragPosLightSpace)
 {
-    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    float depth = linearizeDepth(projCoords.z);
-    depth=clamp(depth,0.0,1.0);
-    projCoords = projCoords * 0.5 + 0.5;
+//    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+//    projCoords=projCoords*0.5+0.5;//归一化到 [0,1]
+//    float depth=projCoords.z;
+//
+//    vec2 uv=projCoords.xy;
+//    vec2 varianceData=texture(depthMap,uv).rg;
+//    float var=varianceData.g - varianceData.r*varianceData.r;
+//    if(depth - 0.001 <= varianceData.r){
+//        return 0.0;
+//    }
+//    else{
+//        return 1-var/(var+pow(depth-varianceData.r, 2.0));
+//    }
 
-    vec2 uv=projCoords.xy;
-    vec2 varianceData=texture(depthMap,uv).rg;
-    float var=varianceData.g - varianceData.r*varianceData.r;
-    if(depth - 0.001 <= varianceData.r){
-        return 0.0;
-    }
-    else{
-        return 1-var/(var+pow(depth-varianceData.r, 2.0));
-    }
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    projCoords = projCoords * 0.5 + 0.5;
+    float currentDepth = projCoords.z;
+    float closestDepth=texture(depthMap,projCoords.xy).x;
+    return (currentDepth>closestDepth)?(1.0):(0.0);
 }
 
  
@@ -278,8 +199,9 @@ void main()
 
         //result
         float shadow=varianceShadowCalculation(FragPosLightSpace);
-        vec3 result=ambient+(1-shadow)*(diffuse+specular);
+        //vec3 result=ambient+(1-shadow)*(diffuse+specular);
         //vec3 result=ambient;
+        vec3 result=(1-shadow)*(ambient+diffuse+specular);
         FragColor=vec4(result,1.0);
         if(shadow>1.0 || shadow<0.0)
         {

@@ -40,25 +40,10 @@ void Widget::initializeGL()
     initializeOpenGLFunctions();
 
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    if (!shaderProgram.addShaderFromSourceFile(QOpenGLShader::Vertex, "shader/model.vert")) {
-        qDebug() << "ERROR:" << shaderProgram.log();
-    }
-    if (!shaderProgram.addShaderFromSourceFile(QOpenGLShader::Fragment, "shader/model.frag")) {
-        qDebug() << "ERROR:" << shaderProgram.log();
-    }
-    if (!shaderProgram.link()) {
-        qDebug() << "ERROR:" << shaderProgram.log();
-    }
 
-    if (!shadowShader.addShaderFromSourceFile(QOpenGLShader::Vertex, "shader/shadow.vert")) {
-        qDebug() << "ERROR:" << shadowShader.log();
-    }
-    if (!shadowShader.addShaderFromSourceFile(QOpenGLShader::Fragment, "shader/shadow.frag")) {
-        qDebug() << "ERROR:" << shadowShader.log();
-    }
-    if (!shadowShader.link()) {
-        qDebug() << "ERROR:" << shadowShader.log();
-    }
+    loadShader(shaderProgram, "shader/model.vert", "shader/model.frag");
+    loadShader(shadowShader, "shader/shadow.vert", "shader/shadow.frag");
+    loadShader(varianceShader, "shader/variance.vert", "shader/variance.frag");
 
     shaders.append(&shaderProgram);
     shaders.append(&shadowShader);
@@ -99,7 +84,7 @@ void Widget::paintGL()
     //更新帧数
     frameCount++;
 
-    //第一轮绘制
+    //第一轮绘制，在引入了VSM后可能会有好几次
     int viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
     shadowPassVSM();
@@ -224,28 +209,6 @@ void Widget::shadowPassNormal()
 void Widget::genFrameBufferVSM()
 {
     //https://github.com/Dilin71828/OpenGL_VSM/blob/master/src/OpenGL_VSM.cpp
-   /* glGenFramebuffers(1, &frameBufferName);
-    glBindFramebuffer(GL_FRAMEBUFFER, frameBufferName);
-    
-    glGenTextures(1, &renderedTexture);
-    glBindTexture(GL_TEXTURE_2D, renderedTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, shadowWidth, shadowHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-    glGenRenderbuffers(1, &depthrenderbuffer);
-    glBindRenderbuffer(GL_RENDERBUFFER, depthrenderbuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, shadowWidth, shadowHeight);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthrenderbuffer);
-
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderedTexture, 0);
-
-    GLenum DrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
-    glDrawBuffers(1, DrawBuffers);
-
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        qDebug() << "VSM imcomplete";*/
-
     
     glGenFramebuffers(1, &depthFBO);
     glGenRenderbuffers(1, &depthRBO);
@@ -257,7 +220,6 @@ void Widget::genFrameBufferVSM()
 
     GLfloat borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
 
-    
     glGenTextures(1, &depthTexture);
     glBindTexture(GL_TEXTURE_2D, depthTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, shadowWidth, shadowHeight, 0, GL_RG, GL_FLOAT, nullptr);
@@ -286,10 +248,29 @@ void Widget::genFrameBufferVSM()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+    //第二第三次渲染需要用
+    float quadVertices[] = {
+        // position        // uv
+        -1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+        -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+        1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
+        1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+    };
+    glGenVertexArrays(1, &quadVAO);
+    glGenBuffers(1, &quadVBO);
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 }
 
 void Widget::shadowPassVSM()
 {
+    //第一次渲染
     glViewport(0, 0, shadowWidth, shadowHeight);
     glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -301,17 +282,34 @@ void Widget::shadowPassVSM()
     glActiveTexture(GL_TEXTURE0 + depthMapIndex);
     glBindTexture(GL_TEXTURE_2D, depthTexture);
 
-    /*glViewport(0, 0, shadowWidth, shadowHeight);
-    glBindFramebuffer(GL_FRAMEBUFFER, frameBufferName);
+    //第二次渲染
+    glBindFramebuffer(GL_FRAMEBUFFER, varianceFBO[0]);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    setUniformValuesShadow();
-    for (auto a : models) {
-        a->draw(&shadowShader);
-    }
+    varianceShader.bind();
+    varianceShader.setUniformValue("horizontal", true);
+    varianceShader.setUniformValue("depthTexture", depthMapIndex);
+    renderQuadVSM();
 
     glActiveTexture(GL_TEXTURE0 + depthMapIndex);
-    glBindTexture(GL_TEXTURE_2D, renderedTexture);*/
+    glBindTexture(GL_TEXTURE_2D, varianceTexture[0]);
 
+    //第三次渲染
+    glBindFramebuffer(GL_FRAMEBUFFER, varianceFBO[1]);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    varianceShader.bind();
+    varianceShader.setUniformValue("horizontal", false);
+    varianceShader.setUniformValue("depthTexture", depthMapIndex);
+    renderQuadVSM();
+
+    glActiveTexture(GL_TEXTURE0 + depthMapIndex);
+    glBindTexture(GL_TEXTURE_2D, varianceTexture[1]);
+}
+
+void Widget::renderQuadVSM()
+{
+    glBindVertexArray(quadVAO);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glBindVertexArray(0);
 }
 
 void Widget::updateFrameTime()
@@ -333,6 +331,19 @@ QSize Widget::getSize()
 QVector<QOpenGLShaderProgram*>& Widget::getShaders()
 {
     return shaders;
+}
+
+void Widget::loadShader(QOpenGLShaderProgram& shader, QString vertPath, QString fragPath)
+{
+    if (!shader.addShaderFromSourceFile(QOpenGLShader::Vertex, vertPath)) {
+        qDebug() << "ERROR:" << shader.log();
+    }
+    if (!shader.addShaderFromSourceFile(QOpenGLShader::Fragment, fragPath)) {
+        qDebug() << "ERROR:" << shader.log();
+    }
+    if (!shader.link()) {
+        qDebug() << "ERROR:" << shader.log();
+    }
 }
 
 void Widget::readBackground(QString path)
@@ -380,14 +391,3 @@ void Widget::saveInfo(OpenGLSharedInfo& info)
         WOUT("WIDGET::info size incorrect.");
     }
 }
-
-//int Widget::heightForWidth(int w)
-//{
-//    if (back)
-//    {
-//        QSize size = back->getSize();
-//        double ratio = (double)size.height() / (double)size.width();
-//        return (w * ratio);
-//    }
-//    return -1;
-//}
