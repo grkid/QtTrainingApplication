@@ -97,8 +97,6 @@
   <ItemGroup>
     <None Include="assimp-vc140-mt.dll" />
     <None Include="assimp-vc140-mt.exp" />
-    <None Include="assimp-vc140-mt.ilk" />
-    <None Include="assimp-vc140-mt.pdb" />
     <None Include="shader\background.frag">
       <Filter>Resource Files</Filter>
     </None>

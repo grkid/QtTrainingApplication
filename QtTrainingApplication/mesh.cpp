@@ -14,12 +14,22 @@ Mesh::Mesh(QOpenGLFunctions* glFunc, aiMatrix4x4 model)
         }
     }
 }
+
+/*
+贴图适配原则：
+至少会有一张漫反射/环境光图，没有的话这两者混用
+如果没有镜面反射图，反射率等于specular强度，否则反射率等于镜面反射图
+*/
 void Mesh::draw(QOpenGLShaderProgram* shader)
 {
-    unsigned int diffuseNr = 1;
+    /*unsigned int diffuseNr = 1;
     unsigned int specularNr = 1;
     unsigned int ambientNr = 1;
-    unsigned int heightNr = 1;
+    unsigned int heightNr = 1;*/
+
+    int diffuseIndex=-1, specularIndex=-1, ambientIndex=-1, heightIndex=-1;
+
+    int haveDiffuse = 0, haveSpecular = 0, haveAmbient = 0, haveHeight = 0;
 
     //在model中已经绑定好shader
     shader->bind();
@@ -27,24 +37,47 @@ void Mesh::draw(QOpenGLShaderProgram* shader)
     for (unsigned int i = 0; i < textures.size(); i++)
     {
         glFunc->glActiveTexture(GL_TEXTURE0 + i); // 在绑定之前激活相应的纹理单元
+        //index与shader中index对应
         // 获取纹理序号（diffuse_textureN 中的 N）
-        QString number;
+        QString number = 0;
         QString name = textures[i]->type;
-        if (name == "texture_diffuse")
-            number = QString::number(diffuseNr++);
-        else if (name == "texture_specular")
-            number = QString::number(specularNr++);
-        else if (name == "texture_ambient")
-            number = QString::number(ambientNr++); // transfer unsigned int to stream
+        if (name == "texture_diffuse") {
+            haveDiffuse = 1;
+            diffuseIndex = i;
+        }
+        else if (name == "texture_specular") {
+            haveSpecular = 1;
+            shader->setUniformValue("haveSpecular", haveSpecular);
+            specularIndex = i;
+        }
+        else if (name == "texture_ambient") {
+            haveAmbient = 1;
+            ambientIndex = i;
+        }
         else if (name == "texture_height")
         {
-            shader->setUniformValue("haveHeight", 1);
-            number = QString::number(heightNr++); // transfer unsigned int to stream
+            haveHeight = 1;
+            shader->setUniformValue("haveHeight", haveHeight);
+            heightIndex = i;
         }
         textures[i]->texture.bind();
         shader->setUniformValue((name + number).toStdString().c_str(), i);
     }
-    // 绘制网格
+
+    //贴图适配
+    if (haveDiffuse || haveAmbient)
+    {
+        if (!haveDiffuse) 
+        {
+            textures[ambientIndex]->texture.bind();
+            shader->setUniformValue("texture_diffuse1", ambientIndex);
+        }
+        else if (!haveAmbient)
+        {
+            textures[diffuseIndex]->texture.bind();
+            shader->setUniformValue("texture_ambient1", diffuseIndex);
+        }
+    }
 
     //如果没有纹理，将模型指定为白色
     if (textures.size() == 0) {

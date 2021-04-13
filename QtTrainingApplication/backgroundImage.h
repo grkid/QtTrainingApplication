@@ -25,6 +25,8 @@ public:
 	//可重入函数
 	void readBackground(QString path);
 
+	const int textureIndex = 14;
+
 private:
 	//~BackgroundImage();
 	QOpenGLWidget* widget;

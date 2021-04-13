@@ -47,6 +47,9 @@ public:
     QVector<QOpenGLShaderProgram*>& getShaders();
     DirectionalLight* directionalLight; //平行光
 
+    void setDemo(int v);
+    int getDemo();
+
 private:
     QOpenGLShaderProgram shaderProgram; //主Shader
     QOpenGLShaderProgram shadowShader;//阴影shader
@@ -67,7 +70,7 @@ private:
     void setUniformValuesShadow();
     void setUniformValuesModel();
 
-    const int shadowWidth = 1920*2, shadowHeight = 1080*2;
+    const int shadowWidth = 1920*4, shadowHeight = 1080*4;
     //QOpenGLShaderProgram shadowShaderProgram;
     QMatrix4x4 lightSpaceMatrix;
 
@@ -106,6 +109,10 @@ private:
 
     const float nearPlane = 0.1;
     const float farPlane = 30.0;
+    const int lightDirectionIndex = 5;
+    const float lightProjectionScale = 20.0;
+
+    int haveDemo = 0;
 };
 
 #endif // WIDGET_H

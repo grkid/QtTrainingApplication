@@ -85,6 +85,7 @@ void Widget::paintGL()
     frameCount++;
 
     //第一轮绘制，在引入了VSM后可能会有好几次
+    glDisable(GL_BLEND);
     int viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
     shadowPassVSM();
@@ -92,6 +93,8 @@ void Widget::paintGL()
     //第二轮绘制
     glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     setUniformValuesModel();
     if (back)
         back->draw();
@@ -118,9 +121,9 @@ void Widget::setUniformValuesShadow()
     modelCentreSum /= models.size();
 
     QMatrix4x4 projection;
-    projection.ortho(-50.0f, 50.0f, -50.0f, 50.0f, nearPlane, farPlane);
+    projection.ortho(-lightProjectionScale, lightProjectionScale, -lightProjectionScale, lightProjectionScale, nearPlane, farPlane);
     QMatrix4x4 view;
-    view.lookAt(directionalLight->getDirection() * 5+modelCentreSum, QVector3D(0, 0, 0)+modelCentreSum, QVector3D(0, 1, 0));
+    view.lookAt(directionalLight->getDirection() * lightDirectionIndex+modelCentreSum, QVector3D(0, 0, 0)+modelCentreSum, QVector3D(0, 1, 0));
     shadowShader.bind();
     shadowShader.setUniformValue("projection", projection);
     shadowShader.setUniformValue("view", view);
@@ -147,14 +150,22 @@ void Widget::setUniformValuesModel()
     shaderProgram.setUniformValue("viewPos", camera.getCameraPos());
     shaderProgram.setUniformValue("nearPlane", nearPlane);
     shaderProgram.setUniformValue("farPlane", farPlane);
+    shaderProgram.setUniformValue("haveDemo", haveDemo);
     directionalLight->set(&shaderProgram);
 
     QMatrix4x4 lightProjection, lightView;
-    lightProjection.ortho(-50.0f, 50.0f, -50.0f, 50.0f, nearPlane, farPlane);
-    lightView.lookAt(directionalLight->getDirection() * 5+modelCentreSum, QVector3D(0, 0, 0)+modelCentreSum, QVector3D(0, 1, 0));
+    lightProjection.ortho(-lightProjectionScale, lightProjectionScale, -lightProjectionScale, lightProjectionScale, nearPlane, farPlane);
+    lightView.lookAt(directionalLight->getDirection() * lightDirectionIndex+modelCentreSum, QVector3D(0, 0, 0)+modelCentreSum, QVector3D(0, 1, 0));
     lightSpaceMatrix = lightProjection * lightView;
     shaderProgram.setUniformValue("lightSpaceMatrix", lightSpaceMatrix);
     shaderProgram.setUniformValue("depthMap", depthMapIndex);
+
+    shaderProgram.setUniformValue("haveBackground", 0);
+    if (back)
+    {
+        shaderProgram.setUniformValue("texture_background", back->textureIndex);
+        shaderProgram.setUniformValue("haveBackground", 1);
+    }
 }
 
 void Widget::genFrameBufferNormal()
@@ -331,6 +342,16 @@ QSize Widget::getSize()
 QVector<QOpenGLShaderProgram*>& Widget::getShaders()
 {
     return shaders;
+}
+
+void Widget::setDemo(int v)
+{
+    haveDemo = v;
+}
+
+int Widget::getDemo()
+{
+    return haveDemo;
 }
 
 void Widget::loadShader(QOpenGLShaderProgram& shader, QString vertPath, QString fragPath)

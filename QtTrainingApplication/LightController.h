@@ -4,6 +4,7 @@
 #include <QSlider>
 #include <QVector>
 #include <QGridLayout>
+#include <QCheckBox>
 #include "LanguageAdapter.h"
 #include <string>
 
@@ -23,6 +24,8 @@ private:
 	QSlider* degXZSlider, *degYSlider;
 	QSlider* redColorSlider, * greenColorSlider, *blueColorSlider;
 	QSlider* ambientTensitySlider, * diffuseTensitySlider, *specularTensitySlider;
+
+	QCheckBox* demoCheckBox;
 
 	float degXZ = 0, degY = 0;	//½Ç¶È
 	float ambientTensity = 1.0, diffuseTensity = 1.0, specularTensity = 1.0;
