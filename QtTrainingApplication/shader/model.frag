@@ -27,6 +27,7 @@ uniform sampler2D texture_ambient1;
 uniform sampler2D texture_height1;
 
 uniform sampler2D texture_background;
+in vec2 vN;
 
 uniform float nearPlane;
 uniform float farPlane;
@@ -43,6 +44,7 @@ uniform int haveBackground; //是否有背景，决定是否开启环境映射
 
 vec2 stride=1.0/textureSize(depthMap, 0);
 //float stride=1.0/2000.0;
+const float environmentMappingRatio=0.25;
 
 mat3 shadowFilter=mat3(
     0.0947416,0.118318,0.0947416,
@@ -158,6 +160,10 @@ void main()
             normal=texture(texture_height1,TexCoords).rgb;
             normal=normalize(normal*2.0-1.0);
             normal=normalize(TBN*normal);
+            if(haveDemo==1)
+            {
+                normal=normalize(Normal);
+            }
         }
 
         vec3 lightDir=normalize(dLight.direction);
@@ -199,11 +205,15 @@ void main()
         else
             specular=spec*vec3(texture(texture_diffuse1, TexCoords));
 
+        //环境映射
+        vec3 environementBase=texture2D(texture_background,vN).rgb;
+
         //result
         float shadow=varianceShadowCalculation(FragPosLightSpace);
         vec3 result=ambient+(1-shadow)*(diffuse+specular);
-        //vec3 result=ambient;
-        //vec3 result=(1-shadow)*(ambient+diffuse+specular);
+        if(haveBackground==1){
+            result+=environmentMappingRatio*environementBase;
+        }
         FragColor=vec4(result,1.0);
     }
     else //if (haveTexture==0)
@@ -231,9 +241,16 @@ void main()
         float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
         vec3 specular=dLight.specular*spec*whiteColor;
 
+        //environment mapping
+        vec3 environementBase=texture2D(texture_background,vN).rgb;
+
+
         //result
         float shadow=varianceShadowCalculation(FragPosLightSpace);
         vec3 result=ambient+(1-shadow)*(diffuse+specular);
+        if(haveBackground==1){
+            result+=environmentMappingRatio*environementBase;
+        }
         float alpha=0.00;
         alpha=shadow;
         if(haveDemo==1)

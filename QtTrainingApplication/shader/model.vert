@@ -20,6 +20,8 @@ uniform mat4 lightSpaceMatrix;
 
 //floor don't need to go through matrix
 //uniform int isFloor;
+
+out vec2 vN;
  
 void main()
 {
@@ -37,4 +39,14 @@ void main()
     vec3 B=normalize(vec3(newModel*vec4(aBitangent,0.0)));
     vec3 N=normalize(vec3(newModel*vec4(aNormal,0.0)));
     TBN=mat3(T,B,N);
+
+    //ª∑æ≥”≥…‰”√
+    vec3 e=normalize(vec3(view*newModel*vec4(aPos, 1.0)));
+    vec3 r=reflect(e,normalize(Normal));
+    float m=2. * sqrt(
+    pow( r.x, 2. ) +
+    pow( r.y, 2. ) +
+    pow( r.z + 1., 2. )
+    );
+    vN = r.xy / m + .5;
 }

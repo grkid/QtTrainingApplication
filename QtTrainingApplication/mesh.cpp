@@ -39,7 +39,7 @@ void Mesh::draw(QOpenGLShaderProgram* shader)
         glFunc->glActiveTexture(GL_TEXTURE0 + i); // 在绑定之前激活相应的纹理单元
         //index与shader中index对应
         // 获取纹理序号（diffuse_textureN 中的 N）
-        QString number = 0;
+        QString number = "1";
         QString name = textures[i]->type;
         if (name == "texture_diffuse") {
             haveDiffuse = 1;
@@ -60,7 +60,7 @@ void Mesh::draw(QOpenGLShaderProgram* shader)
             shader->setUniformValue("haveHeight", haveHeight);
             heightIndex = i;
         }
-        textures[i]->texture.bind();
+        textures[i]->texture.bind(i);
         shader->setUniformValue((name + number).toStdString().c_str(), i);
     }
 
@@ -69,11 +69,13 @@ void Mesh::draw(QOpenGLShaderProgram* shader)
     {
         if (!haveDiffuse) 
         {
+            glFunc->glActiveTexture(GL_TEXTURE0 + ambientIndex);
             textures[ambientIndex]->texture.bind();
             shader->setUniformValue("texture_diffuse1", ambientIndex);
         }
         else if (!haveAmbient)
         {
+            glFunc->glActiveTexture(GL_TEXTURE0 + diffuseIndex);
             textures[diffuseIndex]->texture.bind();
             shader->setUniformValue("texture_ambient1", diffuseIndex);
         }
