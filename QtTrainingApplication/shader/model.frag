@@ -1,4 +1,5 @@
 #version 330 core
+#extension GL_NV_shadow_samplers_cube:enable
 out vec4 FragColor;
 //layout(location = 0) out vec3 color;
 
@@ -26,7 +27,7 @@ uniform sampler2D texture_specular1;
 uniform sampler2D texture_ambient1;
 uniform sampler2D texture_height1;
 
-uniform sampler2D texture_background;
+uniform samplerCube texture_background;
 in vec2 vN;
 
 uniform float nearPlane;
@@ -101,42 +102,11 @@ float varianceShadowCalculation(vec4 fragPosLightSpace)
     vec2 uv=projCoords.xy;
     vec2 varianceData=texture(depthMap,uv).rg;
 
-    //减少light bleeding部分
-//    int filterRadius=10;
-//    int inShadowNum=0;
-//    const int inShadow=6;
-//    vec2 tex_offset = 1.0 / textureSize(depthMap, 0);
-//    vec2 nearbyMax=vec2(0.0,0.0);
-//    for(int i=-1;i<=1;i++)
-//    {
-//        for(int j=-1;j<=1;j++)
-//        {
-//            if(i==0 && j==0)
-//                break;
-//            vec2 uv2=uv+vec2(i*filterRadius*tex_offset.x,j*filterRadius*tex_offset.y);
-//            vec2 temp=texture(depthMap,uv2).rg;
-//            if(depth<=temp.r){
-//                inShadowNum++;
-//                if(temp.r>nearbyMax.r)
-//                    nearbyMax=temp;
-//            }
-//        }
-//    }
-//
-//    bool IS=inShadowNum >= inShadow;
-
     float var=varianceData.g - varianceData.r*varianceData.r;
     if(depth <= varianceData.r){
         return 0.0;
     }
     else{
-//        if(IS)
-//        {
-//            if(haveDemo==0){
-//                varianceData=nearbyMax;
-//                float var=varianceData.g - varianceData.r*varianceData.r;
-//            }
-//        }
         return 1-var/(var+pow(depth-varianceData.r, 2.0));
     }
 }
@@ -160,10 +130,6 @@ void main()
             normal=texture(texture_height1,TexCoords).rgb;
             normal=normalize(normal*2.0-1.0);
             normal=normalize(TBN*normal);
-            if(haveDemo==1)
-            {
-                normal=normalize(Normal);
-            }
         }
 
         vec3 lightDir=normalize(dLight.direction);
@@ -176,23 +142,12 @@ void main()
         //Blinn-Phong
         float spec;
         vec3 specular;
-//        if(haveDemo==1){
-//            spec=pow(max(dot(normal, halfwayDir), 0.0), 64);
-//            specular=dLight.specular*spec*vec3(texture(texture_specular1, TexCoords));
-//        }
-//        else{
-//            float alpha=texture(texture_specular1, TexCoords).r;
-//            alpha=alpha*alpha;
-//            float pi=acos(-1.0);
-//            float nh=dot(normal, halfwayDir);
-//            float D=alpha/(pi*(nh*nh*(alpha-1)+1)*(nh*nh*(alpha-1)+1));
-//            spec=D;
-//            specular=dLight.specular*spec*vec3(texture(texture_specular1, TexCoords));
-//
-//        }
 
 
         //基于PBR的高光算法
+
+        //vec3 viewDir=normalize(viewPos-FragPos);
+        vec3 reflectDir=reflect(-lightDir,normal);
         
         float alpha=dLight.specular.r;    //固定，可以加调整 TODO
         alpha=alpha*alpha;
@@ -206,22 +161,20 @@ void main()
             specular=spec*vec3(texture(texture_diffuse1, TexCoords));
 
         //环境映射
-        vec3 environementBase=texture2D(texture_background,vN).rgb;
+        vec3 environementBase=textureCube(texture_background,reflect(viewPos,normal)).rgb;
 
         //result
-        float shadow=varianceShadowCalculation(FragPosLightSpace);
+        float shadow;
+        shadow=varianceShadowCalculation(FragPosLightSpace);
         vec3 result=ambient+(1-shadow)*(diffuse+specular);
         if(haveBackground==1){
-            result+=environmentMappingRatio*environementBase;
+            result+=environementBase;
         }
         FragColor=vec4(result,1.0);
     }
     else //if (haveTexture==0)
     {
         vec3 whiteColor=vec3(1.0,1.0,1.0);
-        if(haveDemo==1) {
-            whiteColor=dLight.ambient;
-        }
         vec3 ambient=dLight.ambient*whiteColor;
 
         // diffuse
@@ -242,19 +195,21 @@ void main()
         vec3 specular=dLight.specular*spec*whiteColor;
 
         //environment mapping
-        vec3 environementBase=texture2D(texture_background,vN).rgb;
+        vec3 environementBase=textureCube(texture_background,reflect(viewPos,normal)).rgb;
 
 
         //result
-        float shadow=varianceShadowCalculation(FragPosLightSpace);
+        float shadow;
+        shadow=varianceShadowCalculation(FragPosLightSpace);
         vec3 result=ambient+(1-shadow)*(diffuse+specular);
         if(haveBackground==1){
-            result+=environmentMappingRatio*environementBase;
+            //result+=environmentMappingRatio*environementBase;
+            result+=environementBase;
         }
         float alpha=0.00;
         alpha=shadow;
         if(haveDemo==1)
-            FragColor=vec4(result,alpha);
+            FragColor=vec4(result,1.0);
         else
             FragColor=vec4(result,1.0);
     }

@@ -64,6 +64,7 @@ void Widget::initializeGL()
     if (info.backgroundPath != "")
     {
         back = new BackgroundImage(info.backgroundPath, this);
+        loadCubeTexture();
     }
 
     glEnable(GL_DEPTH_TEST);
@@ -163,7 +164,8 @@ void Widget::setUniformValuesModel()
     shaderProgram.setUniformValue("haveBackground", 0);
     if (back)
     {
-        shaderProgram.setUniformValue("texture_background", back->textureIndex);
+        cubeMap->bind(cubeTextureIndex);
+        shaderProgram.setUniformValue("texture_background", cubeTextureIndex);
         shaderProgram.setUniformValue("haveBackground", 1);
     }
 }
@@ -231,15 +233,15 @@ void Widget::genFrameBufferVSM()
 
     GLfloat borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
 
-    glGenTextures(1, &depthTexture);
-    glBindTexture(GL_TEXTURE_2D, depthTexture);
+    glGenTextures(1, &depthTextureVSM);
+    glBindTexture(GL_TEXTURE_2D, depthTextureVSM);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RG32F, shadowWidth, shadowHeight, 0, GL_RG, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, depthTexture, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, depthTextureVSM, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glGenFramebuffers(2, varianceFBO);
@@ -291,7 +293,7 @@ void Widget::shadowPassVSM()
     }
 
     glActiveTexture(GL_TEXTURE0 + depthMapIndex);
-    glBindTexture(GL_TEXTURE_2D, depthTexture);
+    glBindTexture(GL_TEXTURE_2D, depthTextureVSM);
 
     //第二次渲染
     glBindFramebuffer(GL_FRAMEBUFFER, varianceFBO[0]);
@@ -321,6 +323,41 @@ void Widget::renderQuadVSM()
     glBindVertexArray(quadVAO);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
+}
+
+void Widget::loadCubeTexture()
+{
+    /*
+* 坐标系：
+* Z轴垂直屏幕，方向朝外
+* X轴水平，方向朝右
+* Y轴垂直，方向朝上
+*/
+    QImage posx, posy, posz, negx, negy, negz;
+    posx=QImage("image/skybox_img_left.jpg").mirrored(false,true).convertToFormat(QImage::Format_RGBA8888);
+    negx = QImage("image/skybox_img_right.jpg").mirrored(false,true).convertToFormat(QImage::Format_RGBA8888);
+    posy= QImage("image/skybox_img_down.jpg").mirrored(true,false).convertToFormat(QImage::Format_RGBA8888);
+    negy= QImage("image/skybox_img_up.jpg").mirrored(true,false).convertToFormat(QImage::Format_RGBA8888);
+    posz= QImage("image/skybox_img_front.jpg").mirrored(true,false).convertToFormat(QImage::Format_RGBA8888);
+    negz= QImage("image/skybox_img_back.jpg").mirrored(false,true).convertToFormat(QImage::Format_RGBA8888);
+
+    cubeMap = new QOpenGLTexture(QOpenGLTexture::TargetCubeMap);
+    cubeMap->create();
+    cubeMap->setSize(posx.width(), posx.height(), posx.depth());
+    cubeMap->setFormat(QOpenGLTexture::RGBA8_UNorm);
+    cubeMap->allocateStorage();
+
+    cubeMap->setData(0, 0, QOpenGLTexture::CubeMapPositiveX,QOpenGLTexture::RGBA, QOpenGLTexture::UInt8,(const void*)posx.constBits(), 0);
+    cubeMap->setData(0, 0, QOpenGLTexture::CubeMapNegativeX, QOpenGLTexture::RGBA, QOpenGLTexture::UInt8, (const void*)negx.constBits(), 0);
+    cubeMap->setData(0, 0, QOpenGLTexture::CubeMapPositiveY, QOpenGLTexture::RGBA, QOpenGLTexture::UInt8, (const void*)posy.constBits(), 0);
+    cubeMap->setData(0, 0, QOpenGLTexture::CubeMapNegativeY, QOpenGLTexture::RGBA, QOpenGLTexture::UInt8, (const void*)negy.constBits(), 0);
+    cubeMap->setData(0, 0, QOpenGLTexture::CubeMapPositiveZ, QOpenGLTexture::RGBA, QOpenGLTexture::UInt8, (const void*)posz.constBits(), 0);
+    cubeMap->setData(0, 0, QOpenGLTexture::CubeMapNegativeZ, QOpenGLTexture::RGBA, QOpenGLTexture::UInt8, (const void*)negz.constBits(), 0);
+
+    cubeMap->generateMipMaps();
+    cubeMap->setWrapMode(QOpenGLTexture::ClampToEdge);
+    cubeMap->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
+    cubeMap->setMagnificationFilter(QOpenGLTexture::LinearMipMapLinear);
 }
 
 void Widget::updateFrameTime()

@@ -244,7 +244,7 @@ void LightController::setText()
 
 	stream.clear();
 	str.clear();
-	stream << "镜面反射强度：" << specularTensity;
+	stream << "alpha：" << specularTensity;
 	stream >> str;
 	specularTensityLabel->setText(TR(str));
 

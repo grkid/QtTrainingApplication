@@ -79,6 +79,7 @@ private:
     GLuint renderedTexture;
     GLuint depthrenderbuffer;   //阴影用renderbuffer
     GLuint depthTexture;       //normal/VSM公用
+    GLuint depthTextureVSM;
     GLenum drawBuffers[1] = { GL_COLOR_ATTACHMENT0};
 
     //VSM阴影贴图所需
@@ -90,7 +91,6 @@ private:
 
     //所有的阴影贴图最终导向
     const int depthMapIndex = 15;
-    //const int depthMap2Index = 13;
 
     //记录帧生成时间
     QTimer* frameTimer;
@@ -113,6 +113,11 @@ private:
     const float lightProjectionScale = 20.0;
 
     int haveDemo = 0;
+    
+    //skybox相关
+    const int cubeTextureIndex = 13;
+    QOpenGLTexture* cubeMap;
+    void loadCubeTexture();
 };
 
 #endif // WIDGET_H
