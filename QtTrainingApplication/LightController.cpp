@@ -81,6 +81,9 @@ LightController::LightController(QWidget* parent)
 	demoCheckBox = new QCheckBox(TR("开启演示模式"), this);
 	demoCheckBox->setCheckState(Qt::Unchecked);
 
+	floorTransparentCheckBox = new QCheckBox(TR("透明底板"), this);
+	floorTransparentCheckBox->setCheckState(Qt::Unchecked);
+
 	set();
 }
 
@@ -185,6 +188,20 @@ void LightController::set()
 		}
 		);
 
+	connect(floorTransparentCheckBox, &QCheckBox::stateChanged,
+		[=]()
+		{
+			if (floorTransparentCheckBox->checkState() == Qt::Checked)
+			{
+				MainWindow::getOpenGLWidget()->setFloorTransparent(1);
+			}
+			else // unchecked
+			{
+				MainWindow::getOpenGLWidget()->setFloorTransparent(0);
+			}
+		}
+	);
+
 	layout = new QGridLayout();
 	for (int i = 0; i < labels.size(); i++)
 	{
@@ -192,6 +209,7 @@ void LightController::set()
 		layout->addWidget(sliders[i], i, 1);
 	}
 	layout->addWidget(demoCheckBox, labels.size(), 1);
+	layout->addWidget(floorTransparentCheckBox, labels.size()+1, 1);
 	this->setLayout(layout);
 	this->show();
 

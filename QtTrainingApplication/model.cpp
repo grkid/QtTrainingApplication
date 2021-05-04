@@ -36,6 +36,15 @@ void Model::draw(QOpenGLShaderProgram* shader) {
     //shaderProgram->bind();
     shader->bind();
     shader->setUniformValue("transform", transform);
+
+    if (modelName.split(" ")[0] == "floor")
+    {
+        shader->setUniformValue("haveFloor", 1);
+    }
+    else
+    {
+        shader->setUniformValue("haveFloor", 0);
+    }
     for (Mesh* mesh : meshes) {
         mesh->draw(shader);
     }

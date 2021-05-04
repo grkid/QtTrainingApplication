@@ -41,6 +41,8 @@ uniform int haveHeight; //是否有法线贴图
 uniform int haveSpecular; //是否有亮面贴图
 uniform int haveDemo;  //是否开启演示模式
 uniform int haveBackground; //是否有背景，决定是否开启环境映射
+uniform int haveFloor;
+uniform int haveFloorTransparent;
 //在演示模式下，floor会变得完全透明并显示出黑色的阴影，在非演示模式下，floor会是白色
 
 vec2 stride=1.0/textureSize(depthMap, 0);
@@ -111,6 +113,63 @@ float varianceShadowCalculation(vec4 fragPosLightSpace)
     }
 }
 
+vec3 blinnPhongDiffuse(vec3 lightDir,vec3 normal,vec3 diffuseColor)
+{
+    float diff=max(dot(lightDir,normal),0.0);
+    vec3 diffuse=diff*diffuseColor*dLight.diffuse;
+    return diffuse;
+}
+
+vec3 phongSpecular(vec3 viewPos,vec3 FragPos,vec3 lightDir,vec3 normal,vec3 tex)
+{
+    vec3 viewDir=normalize(viewPos-FragPos);
+    vec3 reflectDir=reflect(-lightDir,normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+    vec3 specular=dLight.specular*spec*tex;
+    return specular;
+}
+
+vec3 blinnPhongSpecular(vec3 viewPos,vec3 FragPos,vec3 lightDir,vec3 normal,vec3 tex)
+{
+    vec3 viewDir=normalize(viewPos-FragPos);
+    vec3 reflectDir=reflect(-lightDir,normal);
+    vec3 halfwayDir=normalize(lightDir+viewDir);
+    float spec = pow(max(dot(normal, halfwayDir), 0.0), 32);
+    vec3 specular=dLight.specular*spec*tex;
+    return specular;
+}
+
+vec3 PBRSpecular(vec3 viewPos,vec3 FragPos,vec3 lightDir,vec3 normal,vec3 tex)
+{
+    vec3 viewDir=normalize(viewPos-FragPos);
+    vec3 halfwayDir=normalize(lightDir+viewDir);
+    vec3 reflectDir=reflect(-lightDir,normal);
+
+    float spec;
+    vec3 specular;
+        
+    float alpha=dLight.specular.r;    //固定，可以加调整 TODO
+    alpha=alpha*alpha;
+    float pi=acos(-1.0);
+    float nh=dot(normal, halfwayDir);
+    float D=alpha/(pi*(nh*nh*(alpha-1)+1)*(nh*nh*(alpha-1)+1));
+    spec=D;
+    specular=spec*tex;
+    return specular;
+}
+
+vec3 myClamp(vec3 a)
+{
+    vec3 b;
+    for(int i=0;i<3;i++)
+    {
+        b[i]=a[i];
+        if(a[i]<0)  b[i]=0;
+        if(a[i]>1) b[i]=1;
+    }
+    return b;
+}
+
  
 void main()
 {
@@ -133,32 +192,14 @@ void main()
         }
 
         vec3 lightDir=normalize(dLight.direction);
-        float diff=max(dot(lightDir,normal),0.0);
-        vec3 diffuse=diff*diffuseColor*dLight.diffuse;
+        vec3 diffuse=blinnPhongDiffuse(lightDir,normal,diffuseColor);
 
         //specular
-        vec3 viewDir=normalize(viewPos-FragPos);
-        vec3 halfwayDir=normalize(lightDir+viewDir);
-        //Blinn-Phong
-        float spec;
         vec3 specular;
-
-
-        //基于PBR的高光算法
-
-        //vec3 viewDir=normalize(viewPos-FragPos);
-        vec3 reflectDir=reflect(-lightDir,normal);
-        
-        float alpha=dLight.specular.r;    //固定，可以加调整 TODO
-        alpha=alpha*alpha;
-        float pi=acos(-1.0);
-        float nh=dot(normal, halfwayDir);
-        float D=alpha/(pi*(nh*nh*(alpha-1)+1)*(nh*nh*(alpha-1)+1));
-        spec=D;
         if(haveSpecular==1)
-            specular=spec*vec3(texture(texture_specular1, TexCoords));
+            specular=PBRSpecular(viewPos,FragPos,lightDir,normal,texture(texture_specular1,TexCoords).rgb);
         else
-            specular=spec*vec3(texture(texture_diffuse1, TexCoords));
+            specular=PBRSpecular(viewPos,FragPos,lightDir,normal,texture(texture_diffuse1,TexCoords).rgb);
 
         //环境映射
         vec3 environementBase=textureCube(texture_background,reflect(viewPos,normal)).rgb;
@@ -168,13 +209,15 @@ void main()
         shadow=varianceShadowCalculation(FragPosLightSpace);
         vec3 result=ambient+(1-shadow)*(diffuse+specular);
         if(haveBackground==1){
-            result+=environementBase;
+            //result+=environementBase;
         }
         FragColor=vec4(result,1.0);
     }
     else //if (haveTexture==0)
     {
         vec3 whiteColor=vec3(1.0,1.0,1.0);
+        if(haveFloor==1 && haveFloorTransparent==1)
+            whiteColor=vec3(0.6,0.6,0.6);
         vec3 ambient=dLight.ambient*whiteColor;
 
         // diffuse
@@ -186,13 +229,16 @@ void main()
 
         vec3 lightDir=normalize(dLight.direction);
         float diff=max(dot(lightDir,normal),0.0);
-        vec3 diffuse=diff*diffuseColor*dLight.diffuse;
+        vec3 diffuse=blinnPhongDiffuse(lightDir,normal,diffuseColor);
 
-        //specular
-        vec3 viewDir=normalize(viewPos-FragPos);
-        vec3 reflectDir=reflect(-lightDir,normal);
-        float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-        vec3 specular=dLight.specular*spec*whiteColor;
+        //PBR高光
+        //vec3 viewPos,vec3 FragPos,vec3 lightDir,vec3 normal,vec3 tex
+
+        vec3 specular=PBRSpecular(viewPos,FragPos,lightDir,normal,whiteColor);
+        if(haveDemo==1)
+            specular=blinnPhongSpecular(viewPos,FragPos,lightDir,normal,whiteColor);
+        else if(haveDemo==0)
+            specular=phongSpecular(viewPos,FragPos,lightDir,normal,whiteColor);
 
         //environment mapping
         vec3 environementBase=textureCube(texture_background,reflect(viewPos,normal)).rgb;
@@ -201,15 +247,22 @@ void main()
         //result
         float shadow;
         shadow=varianceShadowCalculation(FragPosLightSpace);
+//        if(haveDemo==1 && haveFloor==0){
+////            if(dot(normal,lightDir)<0)
+////                shadow=0.0;
+//            float sigmoid=1.0/(1+exp(-50.0*dot(normal,lightDir)));
+//            shadow*=sigmoid;
+//        }
         vec3 result=ambient+(1-shadow)*(diffuse+specular);
         if(haveBackground==1){
             //result+=environmentMappingRatio*environementBase;
-            result+=environementBase;
+//            if(haveDemo==1 && haveFloor==0)
+//                result=environementBase+specular;
         }
-        float alpha=0.00;
-        alpha=shadow;
-        if(haveDemo==1)
-            FragColor=vec4(result,1.0);
+        float fragAlpha=0.00;
+        fragAlpha=shadow;
+        if(haveFloor==1 && haveFloorTransparent==1)
+            FragColor=vec4(result,fragAlpha);
         else
             FragColor=vec4(result,1.0);
     }

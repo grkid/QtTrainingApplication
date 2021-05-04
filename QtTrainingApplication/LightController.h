@@ -26,6 +26,7 @@ private:
 	QSlider* ambientTensitySlider, * diffuseTensitySlider, *specularTensitySlider;
 
 	QCheckBox* demoCheckBox;
+	QCheckBox* floorTransparentCheckBox;
 
 	float degXZ = 0, degY = 0;	//½Ç¶È
 	float ambientTensity = 1.0, diffuseTensity = 1.0, specularTensity = 1.0;

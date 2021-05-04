@@ -46,7 +46,7 @@ private:
     QDir directory;                         //模型所在路径
     QMatrix4x4 transform;
     //QVector3D modelCentre = QVector3D(0, 5, 0);
-    float sensitivity = 0.05;
+    float sensitivity = 0.01;
 
     /*求取模型中心*/
     const float _max = 8192.0;

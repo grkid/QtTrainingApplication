@@ -152,6 +152,7 @@ void Widget::setUniformValuesModel()
     shaderProgram.setUniformValue("nearPlane", nearPlane);
     shaderProgram.setUniformValue("farPlane", farPlane);
     shaderProgram.setUniformValue("haveDemo", haveDemo);
+    shaderProgram.setUniformValue("haveFloorTransparent", haveFloorTransparent);
     directionalLight->set(&shaderProgram);
 
     QMatrix4x4 lightProjection, lightView;
@@ -389,6 +390,16 @@ void Widget::setDemo(int v)
 int Widget::getDemo()
 {
     return haveDemo;
+}
+
+void Widget::setFloorTransparent(int v)
+{
+    haveFloorTransparent = v;
+}
+
+int Widget::getFloorTransparent()
+{
+    return haveFloorTransparent;
 }
 
 void Widget::loadShader(QOpenGLShaderProgram& shader, QString vertPath, QString fragPath)

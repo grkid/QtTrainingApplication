@@ -50,6 +50,9 @@ public:
     void setDemo(int v);
     int getDemo();
 
+    void setFloorTransparent(int v);
+    int getFloorTransparent();
+
 private:
     QOpenGLShaderProgram shaderProgram; //主Shader
     QOpenGLShaderProgram shadowShader;//阴影shader
@@ -113,6 +116,7 @@ private:
     const float lightProjectionScale = 20.0;
 
     int haveDemo = 0;
+    int haveFloorTransparent = 0;
     
     //skybox相关
     const int cubeTextureIndex = 13;
