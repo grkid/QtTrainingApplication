@@ -98,9 +98,13 @@ void Widget::paintGL()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     setUniformValuesModel();
     if (back)
+    {
         back->draw();
-     for (auto a : models) {
-        a->draw(&shaderProgram);
+        shaderProgram.bind();
+        shaderProgram.setUniformValue("texture_background_flat", back->textureIndex);
+    }
+    for (auto a : models) {
+    a->draw(&shaderProgram);
     }
 }
 
@@ -163,10 +167,12 @@ void Widget::setUniformValuesModel()
     shaderProgram.setUniformValue("depthMap", depthMapIndex);
 
     shaderProgram.setUniformValue("haveBackground", 0);
+    shaderProgram.setUniformValue("shadowIntensity", shadowIntensity);
     if (back)
     {
         cubeMap->bind(cubeTextureIndex);
         shaderProgram.setUniformValue("texture_background", cubeTextureIndex);
+        //shaderProgram.setUniformValue("texture_background_flat", back->textureIndex);
         shaderProgram.setUniformValue("haveBackground", 1);
     }
 }
@@ -364,9 +370,10 @@ void Widget::loadCubeTexture()
 void Widget::updateFrameTime()
 {
     INT64 frames = frameCount.load(std::memory_order_relaxed);
+    double seconds = frameTimerInterval / 1000.0;
     double value = frames / (double)frameTimerInterval;
     //qDebug() << "frame time:" << value << " avg fps:" << frames;
-    WOUT("frame time:" + QString::number(value) + " average fps:" + QString::number(frames));
+    WOUT("average fps in "+QString::number(seconds)+" seconds: " + QString::number(frames/seconds));
     frameCount.store(0, std::memory_order_relaxed);
 }
 
@@ -400,6 +407,16 @@ void Widget::setFloorTransparent(int v)
 int Widget::getFloorTransparent()
 {
     return haveFloorTransparent;
+}
+
+void Widget::setShadowIntensity(float v)
+{
+    shadowIntensity = v;
+}
+
+float Widget::getShadowIntensity()
+{
+    return shadowIntensity;
 }
 
 void Widget::loadShader(QOpenGLShaderProgram& shader, QString vertPath, QString fragPath)

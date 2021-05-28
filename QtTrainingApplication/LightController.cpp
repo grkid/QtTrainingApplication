@@ -14,6 +14,9 @@ LightController::LightController(QWidget* parent)
 	//degYLabel->setText(TR("垂直角：") + degY + TR("度"));
 	labels.append(degYLabel);
 
+	distanceLabel = new QLabel();
+	labels.append(distanceLabel);
+
 	redColorLabel = new QLabel();
 	//redColorLabel->setText(TR("红色值：") + r);
 	labels.append(redColorLabel);
@@ -38,6 +41,9 @@ LightController::LightController(QWidget* parent)
 	//specularTensityLabel->setText(TR("镜面强度") + specularTensity);
 	labels.append(specularTensityLabel);
 
+	shadowIntensityLabel = new QLabel();
+	labels.append(shadowIntensityLabel);
+
 	degXZSlider = new QSlider();
 	degXZSlider->setMinimum(0); degXZSlider->setMaximum(360);
 	degXZSlider->setValue(degXZ);
@@ -47,6 +53,11 @@ LightController::LightController(QWidget* parent)
 	degYSlider->setMinimum(-90); degYSlider->setMaximum(90);
 	degYSlider->setValue(degY);
 	sliders.append(degYSlider);
+
+	distanceSlider = new QSlider();
+	distanceSlider->setMinimum(0); distanceSlider->setMaximum(10000);
+	distanceSlider->setValue(1 * 100);
+	sliders.append(distanceSlider);
 
 	redColorSlider = new QSlider();
 	redColorSlider->setMinimum(0); redColorSlider->setMaximum(255);
@@ -77,6 +88,11 @@ LightController::LightController(QWidget* parent)
 	specularTensitySlider->setMinimum(0); specularTensitySlider->setMaximum(tensityInterval);
 	specularTensitySlider->setValue(specularTensity * tensityInterval);
 	sliders.append(specularTensitySlider);
+
+	shadowIntensitySlider = new QSlider();
+	shadowIntensitySlider->setMinimum(0); shadowIntensitySlider->setMaximum(tensityInterval);
+	shadowIntensitySlider->setValue(shadowIntensity * tensityInterval);
+	sliders.append(shadowIntensitySlider);
 
 	demoCheckBox = new QCheckBox(TR("开启演示模式"), this);
 	demoCheckBox->setCheckState(Qt::Unchecked);
@@ -174,6 +190,15 @@ void LightController::set()
 		}
 	);
 
+	connect(shadowIntensitySlider, &QSlider::valueChanged,
+		[=]()
+		{
+			shadowIntensity = shadowIntensitySlider->value() / (float)(tensityInterval);
+			setText();
+			MainWindow::getOpenGLWidget()->setShadowIntensity(shadowIntensity);
+		}
+	);
+
 	connect(demoCheckBox, &QCheckBox::stateChanged,
 		[=]()
 		{
@@ -201,6 +226,8 @@ void LightController::set()
 			}
 		}
 	);
+
+
 
 	layout = new QGridLayout();
 	for (int i = 0; i < labels.size(); i++)
@@ -265,6 +292,20 @@ void LightController::setText()
 	stream << "alpha：" << specularTensity;
 	stream >> str;
 	specularTensityLabel->setText(TR(str));
+
+	//TODO:目前为定值
+	stream.clear();
+	str.clear();
+	stream << "光源距离：" << 1;
+	stream >> str;
+	distanceLabel->setText(TR(str));
+
+	//TODO:目前为定值
+	stream.clear();
+	str.clear();
+	stream << "阴影强度：" << shadowIntensity;
+	stream >> str;
+	shadowIntensityLabel->setText(TR(str));
 
 
 }

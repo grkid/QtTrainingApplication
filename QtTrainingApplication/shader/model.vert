@@ -7,6 +7,7 @@ layout (location = 4) in vec3 aBitangent;
  
 out vec2 TexCoords; //纹理坐标
 out vec3 FragPos;   //世界坐标
+out vec2 screenPos; //屏幕坐标
 out vec3 Normal;    //法向量
 out vec4 FragPosLightSpace; //光空间世界坐标
 out mat3 TBN;   //TBN矩阵，用于法线贴图
@@ -27,7 +28,10 @@ void main()
 {
     mat4 newModel=transform*model;
     TexCoords = aTexCoords;
-    gl_Position = projection * view *newModel * vec4(aPos, 1.0);
+    vec4 p=projection * view *newModel * vec4(aPos, 1.0);
+    gl_Position = p;
+    screenPos=p.xy/p.w;
+    screenPos=screenPos*0.5+0.5;
     FragPos=vec3(newModel*vec4(aPos,1.0));
 
     mat3 normalMat=transpose(inverse(mat3(newModel)));

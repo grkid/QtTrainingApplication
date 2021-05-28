@@ -5,6 +5,7 @@ out vec4 FragColor;
 
 in vec2 TexCoords;
 in vec3 FragPos;
+in vec2 screenPos; //屏幕坐标
 in vec3 Normal;
 in vec4 FragPosLightSpace;
 in mat3 TBN;
@@ -28,6 +29,7 @@ uniform sampler2D texture_ambient1;
 uniform sampler2D texture_height1;
 
 uniform samplerCube texture_background;
+uniform sampler2D texture_background_flat;
 in vec2 vN;
 
 uniform float nearPlane;
@@ -44,6 +46,8 @@ uniform int haveBackground; //是否有背景，决定是否开启环境映射
 uniform int haveFloor;
 uniform int haveFloorTransparent;
 //在演示模式下，floor会变得完全透明并显示出黑色的阴影，在非演示模式下，floor会是白色
+
+uniform float shadowIntensity;
 
 vec2 stride=1.0/textureSize(depthMap, 0);
 //float stride=1.0/2000.0;
@@ -85,7 +89,8 @@ float directShadowCalculation(vec4 fragPosLightSpace)
     projCoords = projCoords * 0.5 + 0.5;
     float currentDepth = projCoords.z;
     float closestDepth=texture(depthMap,projCoords.xy).x;
-    return (currentDepth>closestDepth)?(1.0):(0.0);
+    float bias = 0.005;
+    return (currentDepth-bias>closestDepth)?(1.0):(0.0);
         
 }
 
@@ -206,7 +211,7 @@ void main()
 
         //result
         float shadow;
-        shadow=varianceShadowCalculation(FragPosLightSpace);
+        shadow=shadowIntensity*varianceShadowCalculation(FragPosLightSpace);
         vec3 result=ambient+(1-shadow)*(diffuse+specular);
         if(haveBackground==1){
             //result+=environementBase;
@@ -246,7 +251,11 @@ void main()
 
         //result
         float shadow;
-        shadow=varianceShadowCalculation(FragPosLightSpace);
+//        if(haveDemo==1)
+//            shadow=directShadowCalculation(FragPosLightSpace);
+//        else
+//            shadow=filterShadowCalculation(FragPosLightSpace);
+        shadow=shadowIntensity*varianceShadowCalculation(FragPosLightSpace);
 //        if(haveDemo==1 && haveFloor==0){
 ////            if(dot(normal,lightDir)<0)
 ////                shadow=0.0;
@@ -256,15 +265,33 @@ void main()
         vec3 result=ambient+(1-shadow)*(diffuse+specular);
         if(haveBackground==1){
             //result+=environmentMappingRatio*environementBase;
-//            if(haveDemo==1 && haveFloor==0)
-//                result=environementBase+specular;
+            if(haveDemo==1 && haveFloor==0)
+                result=environementBase+specular;
         }
         float fragAlpha=0.00;
         fragAlpha=shadow;
         if(haveFloor==1 && haveFloorTransparent==1)
-            FragColor=vec4(result,fragAlpha);
+        {
+            if(haveBackground==0)
+                FragColor=vec4(result,fragAlpha);
+            else
+            {
+                FragColor=vec4(0.0,0.0,0.0,fragAlpha);
+            }
+        }
         else
+        {
             FragColor=vec4(result,1.0);
+        }
     }
 
 }
+
+/*
+如果不透明度为1：1*上+0*下
+否则：上*下
+
+GL_SRC_ALPHA GL_ONE_MINUS_SRC_ALPHA
+在不透明度为1时 全是上
+在不透明度不为1时 上=0 0*alpha+下*(1-alpha)
+*/

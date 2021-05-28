@@ -20,10 +20,12 @@ private:
 	QLabel* degXZLabel, * degYLabel;
 	QLabel* redColorLabel, * greenColorLabel, * blueColorLabel;
 	QLabel* ambientTensityLabel, *diffuseTensityLabel, *specularTensityLabel;
+	QLabel* distanceLabel, * shadowIntensityLabel;
 
 	QSlider* degXZSlider, *degYSlider;
 	QSlider* redColorSlider, * greenColorSlider, *blueColorSlider;
 	QSlider* ambientTensitySlider, * diffuseTensitySlider, *specularTensitySlider;
+	QSlider* distanceSlider, * shadowIntensitySlider;
 
 	QCheckBox* demoCheckBox;
 	QCheckBox* floorTransparentCheckBox;
@@ -31,6 +33,7 @@ private:
 	float degXZ = 0, degY = 0;	//½Ç¶È
 	float ambientTensity = 1.0, diffuseTensity = 1.0, specularTensity = 1.0;
 	float r = 1.0, g = 1.0, b = 1.0;
+	float shadowIntensity = 1.0;
 
 	int tensityInterval = 1000;
 

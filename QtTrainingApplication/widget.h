@@ -53,6 +53,9 @@ public:
     void setFloorTransparent(int v);
     int getFloorTransparent();
 
+    void setShadowIntensity(float v);
+    float getShadowIntensity();
+
 private:
     QOpenGLShaderProgram shaderProgram; //主Shader
     QOpenGLShaderProgram shadowShader;//阴影shader
@@ -98,7 +101,7 @@ private:
     //记录帧生成时间
     QTimer* frameTimer;
     std::atomic<INT64> frameCount;  //加锁防止线程冲突
-    const int frameTimerInterval = 1000;//ms
+    const int frameTimerInterval = 20000;//ms
 
     //不同的阴影生成方式
     void genFrameBufferNormal();
@@ -122,6 +125,9 @@ private:
     const int cubeTextureIndex = 13;
     QOpenGLTexture* cubeMap;
     void loadCubeTexture();
+
+    //阴影强度
+    float shadowIntensity = 1.0;
 };
 
 #endif // WIDGET_H

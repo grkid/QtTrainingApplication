@@ -105,6 +105,10 @@ void MainWindow::initMenuBar()
             }
         }
     );
+
+    //导入按钮 TODO 之后再完成
+    QMenu* importMenu = mBar->addMenu(TR("导入"));
+
     this->setMenuBar(mBar);
 }
 

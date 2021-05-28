@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
 
 	MainWindow* w;
 	w = MainWindow::getMw();
-	w->setWindowTitle("learn openGL and Qt blalalalala...");
+	w->setWindowTitle("Augmented Reality + Rendering");
 	w->show();
 
 	return a.exec();
