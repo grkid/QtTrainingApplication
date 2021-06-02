@@ -7,6 +7,7 @@
 #include "BackgroundVideo.h"
 int main(int argc, char* argv[])
 {
+	//∑÷÷ß£∫x86 master
 	BackgroundVideo::videoToImage("C:/v1.avi", "C:/output/");
 	QApplication a(argc, argv);
 
