@@ -47,7 +47,7 @@
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|Win32'" Label="QtSettings">
     <QtInstall>5.14.2_msvc2017</QtInstall>
-    <QtModules>3danimation;3dcore;3dextras;3dinput;3dlogic;3drender;core;gui;opengl;openglextensions;widgets</QtModules>
+    <QtModules>3danimation;3dcore;3dextras;3dinput;3dlogic;3drender;core;gui;multimedia;multimediawidgets;opengl;openglextensions;widgets</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|Win32'" Label="QtSettings">
@@ -71,13 +71,24 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|Win32'">
     <LibraryPath>C:\Program Files %28x86%29\Windows Kits\10\Lib\10.0.18362.0\um\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|Win32'">
   </PropertyGroup>
+  <PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <QtInstall>5.14.2_msvc2017</QtInstall>
+    <QtModules>core;gui;multimedia;multimediawidgets;opengl;openglextensions;widgets</QtModules>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>avcodec.lib;avformat.lib;avutil.lib;avdevice.lib;avfilter.lib;postproc.lib;swresample.lib;swscale.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <AdditionalLibraryDirectories>C:\documents\final\QtTrainingApplication\QtTrainingApplication\ffmpeg_lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <ClCompile>
+      <LanguageStandard>stdcpp14</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\documents\final\QtTrainingApplication\QtTrainingApplication\ffmpeg_include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|Win32'" Label="Configuration">
     <ClCompile>
@@ -107,6 +118,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="backgroundImage.cpp" />
+    <ClCompile Include="BackgroundVideo.cpp" />
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="DirectionalLight.cpp" />
     <ClCompile Include="LanguageAdapter.cpp" />
@@ -123,6 +135,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="backgroundImage.h" />
+    <ClInclude Include="BackgroundVideo.h" />
     <ClInclude Include="camera.h" />
     <QtMoc Include="MainWindow.h" />
     <ClInclude Include="DirectionalLight.h" />

@@ -4,8 +4,10 @@
 #include "CoreFunctionWidget.h"
 #include "widget.h"
 #include "MainWindow.h"
+#include "BackgroundVideo.h"
 int main(int argc, char* argv[])
 {
+	BackgroundVideo::videoToImage("C:/v1.avi", "C:/output/");
 	QApplication a(argc, argv);
 
 	/*Widget w;

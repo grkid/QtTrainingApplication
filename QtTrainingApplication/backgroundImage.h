@@ -20,6 +20,7 @@ public:
 	void draw();
 	//void destroy();
 	BackgroundImage(QString path, QOpenGLWidget* widget);
+	~BackgroundImage();
 	QSize getSize();
 
 	//可重入函数

@@ -64,6 +64,11 @@ BackgroundImage::BackgroundImage(QString path, QOpenGLWidget* widget)
     shaderProgram.enableAttributeArray("aTexCoord");
 }
 
+BackgroundImage::~BackgroundImage()
+{
+    //暂时没有需要清理的
+}
+
 QSize BackgroundImage::getSize()
 {
     return image.size();

@@ -7,6 +7,7 @@
 #include <QOpenGLContext>
 #include <QVector4D>
 #include <QVector3D>
+#include "Assimp/Importer.hpp"
 
 enum modelOperation { modelTranslate, modelRotate, modelScale };
 enum modelDirection { tLeft, tRight, tUp, tDown, tFront, tBack, rXa, rXc, rYa, rYc, rZa, rZc, sUp, sDown };

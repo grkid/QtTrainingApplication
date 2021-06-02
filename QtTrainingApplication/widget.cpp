@@ -33,6 +33,12 @@ Widget::~Widget()
     }
     if (frameTimer)
         delete frameTimer;
+
+    if (cubeMap)
+        delete cubeMap;
+
+    if (directionalLight)
+        delete directionalLight;
 }
 
 void Widget::initializeGL()
