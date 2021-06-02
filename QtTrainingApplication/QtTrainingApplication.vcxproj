@@ -92,7 +92,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>C:\documents\final\QtTrainingApplication\QtTrainingApplication\ffmpeg_include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\documents\final\QtTrainingApplication\QtTrainingApplication\assimp;C:\documents\final\QtTrainingApplication\QtTrainingApplication\ffmpeg_include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies>avcodec.lib;avformat.lib;avutil.lib;avdevice.lib;avfilter.lib;postproc.lib;swresample.lib;swscale.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -156,8 +156,8 @@
     <ClInclude Include="OpenGLSharedInfo.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="assimp-vc142-mt.dll" />
-    <None Include="assimp-vc142-mt.exp" />
+    <None Include="assimp-vc142-mtd.dll" />
+    <None Include="assimp-vc142-mtd.exp" />
     <None Include="shader\background.frag" />
     <None Include="shader\background.vert" />
     <None Include="shader\model.frag" />
@@ -168,7 +168,7 @@
     <None Include="shader\variance.vert" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="assimp-vc142-mt.lib" />
+    <Library Include="assimp-vc142-mtd.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

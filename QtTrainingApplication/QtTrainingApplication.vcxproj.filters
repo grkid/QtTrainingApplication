@@ -125,15 +125,15 @@
     <None Include="shader\variance.vert">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="assimp-vc142-mt.dll">
+    <None Include="assimp-vc142-mtd.dll">
       <Filter>Translation Files</Filter>
     </None>
-    <None Include="assimp-vc142-mt.exp">
+    <None Include="assimp-vc142-mtd.exp">
       <Filter>Translation Files</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Library Include="assimp-vc142-mt.lib">
+    <Library Include="assimp-vc142-mtd.lib">
       <Filter>Translation Files</Filter>
     </Library>
   </ItemGroup>
