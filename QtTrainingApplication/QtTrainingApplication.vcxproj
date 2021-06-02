@@ -76,7 +76,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|Win32'">
   </PropertyGroup>
   <PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <QtInstall>5.14.2_msvc2017</QtInstall>
+    <QtInstall>5.14.2_msvc2017_x64</QtInstall>
     <QtModules>core;gui;multimedia;multimediawidgets;opengl;openglextensions;widgets</QtModules>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -89,6 +89,15 @@
       <LanguageStandard>stdcpp14</LanguageStandard>
       <AdditionalIncludeDirectories>C:\documents\final\QtTrainingApplication\QtTrainingApplication\ffmpeg_include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>C:\documents\final\QtTrainingApplication\QtTrainingApplication\ffmpeg_include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>avcodec.lib;avformat.lib;avutil.lib;avdevice.lib;avfilter.lib;postproc.lib;swresample.lib;swscale.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\documents\final\QtTrainingApplication\QtTrainingApplication\ffmpeg_lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|Win32'" Label="Configuration">
     <ClCompile>
@@ -147,8 +156,8 @@
     <ClInclude Include="OpenGLSharedInfo.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="assimp-vc140-mt.dll" />
-    <None Include="assimp-vc140-mt.exp" />
+    <None Include="assimp-vc142-mt.dll" />
+    <None Include="assimp-vc142-mt.exp" />
     <None Include="shader\background.frag" />
     <None Include="shader\background.vert" />
     <None Include="shader\model.frag" />
@@ -159,7 +168,7 @@
     <None Include="shader\variance.vert" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="assimp-vc140-mt.lib" />
+    <Library Include="assimp-vc142-mt.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

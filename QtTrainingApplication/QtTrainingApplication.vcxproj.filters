@@ -101,8 +101,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="assimp-vc140-mt.dll" />
-    <None Include="assimp-vc140-mt.exp" />
     <None Include="shader\background.frag">
       <Filter>Resource Files</Filter>
     </None>
@@ -127,8 +125,16 @@
     <None Include="shader\variance.vert">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="assimp-vc142-mt.dll">
+      <Filter>Translation Files</Filter>
+    </None>
+    <None Include="assimp-vc142-mt.exp">
+      <Filter>Translation Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <Library Include="assimp-vc140-mt.lib" />
+    <Library Include="assimp-vc142-mt.lib">
+      <Filter>Translation Files</Filter>
+    </Library>
   </ItemGroup>
 </Project>
