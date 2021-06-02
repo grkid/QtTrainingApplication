@@ -61,7 +61,8 @@ void Mesh::draw(QOpenGLShaderProgram* shader)
             heightIndex = i;
         }
         textures[i]->texture.bind(i);
-        shader->setUniformValue((name + number).toStdString().c_str(), i);
+        std::string stdstr = (name + number).toLocal8Bit().data();
+        shader->setUniformValue(stdstr.c_str(), i);
     }
 
     //ÌùÍ¼ÊÊÅä

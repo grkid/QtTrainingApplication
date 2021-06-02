@@ -156,8 +156,8 @@
     <ClInclude Include="OpenGLSharedInfo.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="assimp-vc142-mtd.dll" />
-    <None Include="assimp-vc142-mtd.exp" />
+    <None Include="assimp-vc140-mt.dll" />
+    <None Include="assimp-vc140-mt.exp" />
     <None Include="shader\background.frag" />
     <None Include="shader\background.vert" />
     <None Include="shader\model.frag" />
@@ -168,7 +168,7 @@
     <None Include="shader\variance.vert" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="assimp-vc142-mtd.lib" />
+    <Library Include="assimp-vc140-mt.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

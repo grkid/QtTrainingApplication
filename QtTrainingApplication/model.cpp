@@ -196,7 +196,8 @@ QVector<Texture*> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType typ
         for (unsigned int j = 0; j < textures_loaded.size(); j++)
         {
             //const char* str1 = textures_loaded[j]->path.toStdString().c_str();
-            if (std::strcmp(textures_loaded[j]->path.toStdString().c_str(), str.C_Str()) == 0)
+            std::string stdstr = textures_loaded[j]->path.toLocal8Bit().data();
+           if (std::strcmp(stdstr.c_str(), str.C_Str()) == 0)
             {
                 textures.push_back(textures_loaded[j]);
                 skip = true; //【优化】 带有相同filepath的纹理已经加载，继续到下一个
