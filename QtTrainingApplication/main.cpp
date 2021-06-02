@@ -7,6 +7,7 @@
 #include "BackgroundVideo.h"
 int main(int argc, char* argv[])
 {
+	//写入x64分支信息
 	BackgroundVideo::videoToImage("C:/v1.avi", "C:/output/");
 	QApplication a(argc, argv);
 
