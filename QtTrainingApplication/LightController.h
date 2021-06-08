@@ -7,6 +7,7 @@
 #include <QCheckBox>
 #include "LanguageAdapter.h"
 #include <string>
+#include "OpenGLSharedInfo.h"
 
 class LightController:public QWidget
 {
@@ -15,6 +16,7 @@ class LightController:public QWidget
 public:
 	LightController(QWidget* parent = NULL);
 	~LightController();
+	void sync(const OpenGLSharedInfo & info); //与场景的光照信息同步，适合读取场景时使用
 
 private:
 	QLabel* degXZLabel, * degYLabel;
@@ -44,6 +46,7 @@ private:
 
 	void set();
 	void setText();
+	void setUI();
 };
 
 

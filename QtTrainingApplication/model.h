@@ -7,10 +7,24 @@
 #include <QOpenGLContext>
 #include <QVector4D>
 #include <QVector3D>
+#include <QString>
 #include "Assimp/Importer.hpp"
 
 enum modelOperation { modelTranslate, modelRotate, modelScale };
 enum modelDirection { tLeft, tRight, tUp, tDown, tFront, tBack, rXa, rXc, rYa, rYc, rZa, rZc, sUp, sDown };
+
+struct extraTexture
+{
+    int meshIndex;
+    QString texturePath;
+    QString textureType;
+    extraTexture(int a, QString str1, QString str2)
+    {
+        meshIndex = a;
+        texturePath = str1;
+        textureType = str2;
+    }
+};
 
 class Model
 {
@@ -47,7 +61,7 @@ private:
     QDir directory;                         //模型所在路径
     QMatrix4x4 transform;
     //QVector3D modelCentre = QVector3D(0, 5, 0);
-    float sensitivity = 0.02;
+    float sensitivity = 0.10;
 
     /*求取模型中心*/
     const float _max = 8192.0;
@@ -68,6 +82,10 @@ private:
     //加载材质纹理
     QVector<Texture*> loadMaterialTextures(aiMaterial* mat, aiTextureType type, QString typeName);
 
+    //特殊处理加载纹理的数据
+    QVector<extraTexture> extraTextures;
+    void processExtraTextures();
+    int nowMeshIndex = -1;
 };
 
 /*

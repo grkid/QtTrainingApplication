@@ -20,7 +20,7 @@ void MainWindow::initLayout()
     text = new QTextEdit(this);
     /*text->setText("debug info\n");*/
     text->setMaximumHeight(300);
-    text->setMinimumHeight(300);
+    text->setMinimumHeight(20);
     //text->setEnabled(false);
     //text->setFocusPolicy(Qt::NoFocus);
     text->setReadOnly(true);
@@ -55,6 +55,8 @@ void MainWindow::initMenuBar()
     fileMenu->addSeparator();
     QAction* readModel = fileMenu->addAction(TR("读取模型"));
     fileMenu->addSeparator();
+    QAction* readPrefabricatedModel = fileMenu->addAction(TR("读取预制模型（TODO）"));
+    fileMenu->addSeparator();
     QAction* saveImage = fileMenu->addAction(TR("保存"));
 
     connect(readBackground, &QAction::triggered,
@@ -68,6 +70,7 @@ void MainWindow::initMenuBar()
             );
             if (path != "") {
                 info.backgroundPath = path;
+                openglWidget->gatherInfo(info);
                 reloadOpenGL();
             }
         }
@@ -83,7 +86,9 @@ void MainWindow::initMenuBar()
                 "Files(*)"
             );
             if (path != "") {
+                openglWidget->gatherInfo(info);
                 info.modelPaths.append(path);
+                info.modelTransforms.append(QMatrix4x4());
                 modelController->addmodelName(QFileInfo(path).baseName());
                 reloadOpenGL();
             }
@@ -108,6 +113,52 @@ void MainWindow::initMenuBar()
 
     //导入按钮 TODO 之后再完成
     QMenu* importMenu = mBar->addMenu(TR("导入"));
+
+    QMenu* sceneMenu = mBar->addMenu(TR("场景"));
+
+    QAction* loadScene = sceneMenu->addAction(TR("读取场景"));
+    sceneMenu->addSeparator();
+    QAction* saveScene = sceneMenu->addAction(TR("写入场景"));
+
+    connect(loadScene, &QAction::triggered,
+        [=]()
+        {
+            QString path = QFileDialog::getOpenFileName(
+                this,
+                TR("读取场景"),
+                "../",
+                "Files(*)"
+            );
+            if (path != "") {
+                info.readSharedInfo(path);
+                reloadOpenGL();
+                //同步各个组件
+                modelController->clearModelName();
+                for(auto item:info.modelPaths)
+                    modelController->addmodelName(QFileInfo(item).baseName());
+                lightController->sync(info);
+            }
+        }
+    );
+
+    connect(saveScene, &QAction::triggered,
+        [=]()
+        {
+            QString path = QFileDialog::getSaveFileName(
+                this,
+                TR("写入场景"),
+                "../",
+                "Files(*)"
+            );
+            if (path != "") {
+                openglWidget->gatherInfo(info);//同步
+                info.writeSharedInfo(path);
+                //不需要做其他的操作
+            }
+        }
+    );
+
+
 
     this->setMenuBar(mBar);
 }
@@ -151,7 +202,7 @@ void MainWindow::reloadOpenGL()
     {
         old->setParent(NULL);
         layout->removeWidget(old);
-        old->saveInfo(info);
+        //old->gatherInfo(info);
     }
     openglWidget = new Widget(info);
     layout->addWidget(openglWidget, 0, 2);

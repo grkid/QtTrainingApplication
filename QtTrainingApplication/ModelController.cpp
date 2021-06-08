@@ -79,6 +79,12 @@ void ModelController::addmodelName(QString str)
 	comboBox->addItem(str);
 }
 
+void ModelController::clearModelName()
+{
+	modelNameList.clear();
+	comboBox->clear();
+}
+
 void ModelController::set()
 {
 	for (auto item : buttonVector)

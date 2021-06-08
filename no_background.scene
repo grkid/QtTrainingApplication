@@ -1,0 +1,9 @@
+model paths::C:/documents/final/QtTrainingApplication/QtTrainingApplication/APC/APC.obj
+model matrixs::0.00435154 0 0 0 0 0.00435154 0 0 0 0 0.00435154 0 0 0 0 1
+background::
+ambient tensity::1
+diffuse tensity::1
+specular tensity::1
+shadow tensity::1
+light direction::-0.188144 -0.940721 -0.282216
+light color::1 1 1

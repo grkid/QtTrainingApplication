@@ -1,0 +1,9 @@
+model paths::C:/documents/final/QtTrainingApplication/QtTrainingApplication/genji/Genji.FBX
+model matrixs::0.168822 0 0 0 0 0.168822 0 0 0 0 0.168822 0 0 -1.12796 0 1
+background::C:/documents/final/QtTrainingApplication/2.jpg
+ambient tensity::1
+diffuse tensity::1
+specular tensity::1
+shadow tensity::1
+light direction::-0.188144 -0.940721 -0.282216
+light color::1 1 1

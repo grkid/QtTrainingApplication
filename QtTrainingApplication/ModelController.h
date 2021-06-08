@@ -15,6 +15,7 @@ public:
 	~ModelController();
 
 	void addmodelName(QString str);
+	void clearModelName();
 
 private:
 	QPushButton* leftButton, *rightButton, *upButton, *downButton, *frontButton, *backButton;

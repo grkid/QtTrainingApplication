@@ -11,7 +11,7 @@ Widget::Widget(OpenGLSharedInfo& info,QWidget* parent)
     connect(&timer, &QTimer::timeout, this, static_cast<void (Widget::*)()>(&Widget::update));
     timer.start();
 
-    setMinimumSize(QSize(480, 360));
+    setMinimumSize(QSize(480, 120));
     
     // 抗锯齿
     QSurfaceFormat format;
@@ -56,22 +56,8 @@ void Widget::initializeGL()
 
     directionalLight = new DirectionalLight();
 
-
-    for (int i=0,size=info.modelPaths.size();i<size;i++)
-    {
-        Model* newModel = Model::createModel(info.modelPaths[i], context());
-        if (i<info.modelTransforms.size()) {
-            newModel->setTransform(info.modelTransforms[i]);
-        }
-        models.append(newModel);
-        modelMap.insert(newModel->getName(), newModel);
-    }
-
-    if (info.backgroundPath != "")
-    {
-        back = new BackgroundImage(info.backgroundPath, this);
-        loadCubeTexture();
-    }
+    //在所有下属类创建完成后，分发信息
+    distributeInfo();
 
     glEnable(GL_DEPTH_TEST);
 
@@ -373,6 +359,31 @@ void Widget::loadCubeTexture()
     cubeMap->setMagnificationFilter(QOpenGLTexture::LinearMipMapLinear);
 }
 
+void Widget::distributeInfo()
+{
+    for (int i = 0, size = info.modelPaths.size(); i < size; i++)
+    {
+        Model* newModel = Model::createModel(info.modelPaths[i], context());
+        if (i < info.modelTransforms.size()) {
+            newModel->setTransform(info.modelTransforms[i]);
+        }
+        models.append(newModel);
+        modelMap.insert(newModel->getName(), newModel);
+    }
+
+    if (info.backgroundPath != "")
+    {
+        back = new BackgroundImage(info.backgroundPath, this);
+        loadCubeTexture();
+    }
+
+    directionalLight->setAmbientTensity(info.ambientTensity);
+    directionalLight->setDiffuseTensity(info.diffuseTensity);
+    directionalLight->setSpecularTensity(info.specularTensity);
+    directionalLight->setDirection(info.direction);
+    directionalLight->setColor(info.rgbColor);
+}
+
 void Widget::updateFrameTime()
 {
     INT64 frames = frameCount.load(std::memory_order_relaxed);
@@ -458,7 +469,7 @@ void Widget::saveResult(QString path)
 
 void Widget::modelTransform(QString modelName, modelOperation op, modelDirection dir)
 {
-    //TODO:修改模型名为真正的模型名
+    //DONE:修改模型名为真正的模型名
     Model* model = modelMap.value(modelName);
     if (!model)
     {
@@ -470,13 +481,23 @@ void Widget::modelTransform(QString modelName, modelOperation op, modelDirection
     model->modelTransform(op, dir);
 }
 
-void Widget::saveInfo(OpenGLSharedInfo& info)
+void Widget::gatherInfo(OpenGLSharedInfo& info)
 {
+    //modelPath,backGroundPath:已经完整
+
     info.modelTransforms.clear();
     for (auto item : models)
     {
         info.modelTransforms.append(item->getTransform());
     }
+
+    info.ambientTensity = directionalLight->getAmbientTensity();
+    info.diffuseTensity = directionalLight->getDiffuseTensity();
+    info.specularTensity = directionalLight->getSpecularTensity();
+    info.direction = directionalLight->getDirection();
+    info.rgbColor = directionalLight->getColor();
+    info.shadowIntensity = this->shadowIntensity;
+
     if (info.modelPaths.size() != info.modelTransforms.size())
     {
         //qDebug() << "WIDGET::info size incorrect.";

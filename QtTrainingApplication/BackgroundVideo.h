@@ -2,6 +2,9 @@
 #include <QString>
 #include <QOpenGLWidget>
 #include <QSize>
+#include <QDebug>
+#include <QVector>
+#include <QImage>
 #include "backgroundImage.h"
 
 extern "C" {
@@ -20,7 +23,8 @@ public:
 	~BackgroundVideo();
 	QSize getSize();
 
-    static int videoToImage(const QString& audioPath, const QString& outputDir) 
+    //debug用
+    static int videoToImage_static(const QString& audioPath, const QString& outputDir) 
     {
 
         AVFormatContext* formatContext = avformat_alloc_context();                                    //分配fomat上下文
@@ -74,12 +78,18 @@ public:
                 break;
             if (packet->stream_index == videoStreamIndex) {
                 if (avcodec_send_packet(codecContext, packet) != 0)
+                {
+                    qDebug() << "avcodec_send_packet continue";
                     continue;
+                }
                 if (avcodec_receive_frame(codecContext, frame) != 0)
+                {
+                    qDebug() << "avcodec_receive_frame continue";
                     continue;
+                }
                 sws_scale(imgConvertContext, frame->data, frame->linesize, 0, codecParam->height, outputDst, outputLineSize);
 
-                output.save(outputDir + QString::number(index++) + ".jpg");
+                //output.save(outputDir + QString::number(index++) + ".jpg");
             }
         }
         av_frame_free(&frame);
@@ -90,8 +100,20 @@ public:
         return 0;
     }
 
+    void __debug_out();
+
+    //实际使用
+
+
 private:
 	BackgroundImage* background;
 	QString videoPath;
+
+    int frameCount = -1;    //总帧数
+    //const int frameSaveInterval = 100;  //每隔一段帧数保留一个检查点
+    QVector<QImage> images;
+
+    AVCodecContext* codecContext;
+    int videoStreamIndex;
 };
 

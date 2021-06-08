@@ -309,3 +309,15 @@ void LightController::setText()
 
 
 }
+
+void LightController::setUI()
+{
+}
+
+void LightController::sync(const OpenGLSharedInfo& info)
+{
+	//TODO: complete sync
+	qDebug() << "LightController::sync not complete yet.";
+	/*setUI();
+	setText();*/
+}

@@ -1,0 +1,9 @@
+model paths::C:/documents/final/QtTrainingApplication/QtTrainingApplication/APC/APC.obj
+model matrixs::0.00466871 0 0 0 0 0.00465733 0.000325672 0 0 -0.000325672 0.00465733 0 0 0.0961798 -1.37544 1
+background::C:/documents/final/QtTrainingApplication/北大楼 猫 alpha=0.155.jpg
+ambient tensity::0.773
+diffuse tensity::0.526
+specular tensity::0.474
+shadow tensity::1
+light direction::0.11538 -0.559193 0.820969
+light color::0.682353 0.847059 0.462745

@@ -340,3 +340,5 @@ ASALocalRun/
 healthchecksdb
 /QtTrainingApplication/glm/out/build/x64-Debug
 /QtTrainingApplication/test_models.7z
+/outImg
+/QtTrainingApplication/APC

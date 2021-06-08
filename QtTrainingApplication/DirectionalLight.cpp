@@ -38,6 +38,11 @@ void DirectionalLight::setDirection(float degXZ, float degY)
 	setDirection(cos(radXZ) * cos(radY), sin(radY), sin(radXZ) * cos(radY));
 }
 
+void DirectionalLight::setDirection(QVector3D d)
+{
+	direction = d;
+}
+
 QVector3D DirectionalLight::getDirection()
 {
 	return direction;
@@ -83,6 +88,11 @@ void DirectionalLight::setColor(float r, float g, float b)
 		b = rgbColor.z();
 
 	rgbColor = QVector3D(r, g, b);
+}
+
+void DirectionalLight::setColor(QVector3D c)
+{
+	rgbColor = c;
 }
 
 QVector3D DirectionalLight::getColor()

@@ -11,6 +11,7 @@ public:
     //传入-1即为无效值，不设置
     void setDirection(float x, float y, float z);
     void setDirection(float degXZ, float degY);
+    void setDirection(QVector3D d);
     QVector3D getDirection();
     void setAmbientTensity(float value);
     float getAmbientTensity();
@@ -19,6 +20,7 @@ public:
     void setSpecularTensity(float value);
     float getSpecularTensity();
     void setColor(float r, float g, float b);
+    void setColor(QVector3D c);
     QVector3D getColor();
 
 private:

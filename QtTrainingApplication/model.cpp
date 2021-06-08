@@ -4,6 +4,7 @@ Model::Model(QString path, QOpenGLContext* context)
     : context(context)
     , directory(path)
 {
+    processExtraTextures(); //数据暂且写死
     Assimp::Importer import;
     const aiScene* scene = import.ReadFile(directory.absolutePath().toLocal8Bit(), aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
     modelName = QFileInfo(path).baseName();
@@ -19,6 +20,7 @@ Model::Model(QString path, QOpenGLContext* context)
     qDebug() << "animation:" << scene->mNumAnimations;
     directory.cdUp();
     processNode(scene->mRootNode, scene);
+    nowMeshIndex = -1;
 }
 
 Model::~Model() //销毁对象
@@ -78,6 +80,7 @@ void Model::processNode(aiNode* node, const aiScene* scene, aiMatrix4x4 mat4)
     // 处理节点所有的网格（如果有的话）
     for (unsigned int i = 0; i < node->mNumMeshes; i++)
     {
+        nowMeshIndex++;
         aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
         meshes.push_back(processMesh(mesh, scene, mat4));
 
@@ -220,7 +223,44 @@ QVector<Texture*> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType typ
             }
         }
     }
+
+    //TODO:额外添加纹理
+    if (mat->GetTextureCount(type) == 0 && modelName == "APC")
+    {
+        for (auto item : extraTextures)
+        {
+            if (item.meshIndex == nowMeshIndex)
+            {
+                Texture* texture = new Texture;
+                QImage data(item.texturePath);
+                if (!data.isNull()) {
+                    texture->texture.setData(data);
+                    texture->type = item.textureType;
+                    texture->path = item.texturePath;
+                    textures.push_back(texture);
+                    //textures_loaded.push_back(texture);  // store it as texture loaded for entire model, to ensure we won't unnecesery load duplicate textures.
+                }
+                break;
+            }
+        }
+    }
     return textures;
+}
+
+void Model::processExtraTextures()
+{
+    //TODO:暂且写死，今后需要加上拓展性
+    QString str1 = "C:/documents/final/QtTrainingApplication/QtTrainingApplication/APC/1.png";
+    QString str2 = "C:/documents/final/QtTrainingApplication/QtTrainingApplication/APC/2.png";
+    QString str3 = "C:/documents/final/QtTrainingApplication/QtTrainingApplication/APC/3.png";
+    QString type = "texture_diffuse";
+    extraTextures.append(extraTexture(0, str2, type));
+    extraTextures.append(extraTexture(1, str2, type));
+    extraTextures.append(extraTexture(2, str2, type));
+    extraTextures.append(extraTexture(3, str2, type));  //四个轮子
+    extraTextures.append(extraTexture(4, str3, type));  //车窗
+    extraTextures.append(extraTexture(5, str1, type));  //不知道5是哪个
+    extraTextures.append(extraTexture(6, str1, type));  //车体
 }
 
 QString Model::getName()
@@ -233,44 +273,44 @@ void Model::modelTransform(modelOperation op, modelDirection dir)
     if (op == modelTranslate)
     {
         if (dir == tLeft) {
-            transform.translate(-sensitivity, 0, 0);
+            transform.translate(-sensitivity*5, 0, 0);
             //modelCentre += QVector3D(-sensitivity, 0, 0);
         }
         else if (dir == tRight) {
-            transform.translate(sensitivity, 0, 0);
+            transform.translate(sensitivity*5, 0, 0);
             //modelCentre += QVector3D(sensitivity, 0, 0);
         }
         else if (dir == tUp) {
-            transform.translate(0, sensitivity, 0);
+            transform.translate(0, sensitivity*5, 0);
             //modelCentre += QVector3D(0, sensitivity, 0);
         }
         else if (dir == tDown) {
-            transform.translate(0, -sensitivity, 0);
+            transform.translate(0, -sensitivity*5, 0);
             //modelCentre += QVector3D(0, -sensitivity, 0);
         }
         else if (dir == tFront) {
-            transform.translate(0, 0, +sensitivity);
+            transform.translate(0, 0, +sensitivity*5);
             //modelCentre += QVector3D(0, 0,sensitivity);
         }
         else if (dir == tBack) {
-            transform.translate(0, 0, -sensitivity);
+            transform.translate(0, 0, -sensitivity*5);
             //modelCentre += QVector3D(0, 0, -sensitivity);
         }
     }
     else if (op == modelRotate)
     {
         if (dir == rXa)
-            transform.rotate(sensitivity*10, 1, 0, 0);
+            transform.rotate(sensitivity*2, 1, 0, 0);
         else if (dir == rXc)
-            transform.rotate(-sensitivity*10, 1, 0, 0);
+            transform.rotate(-sensitivity*2, 1, 0, 0);
         else if (dir == rYa)
-            transform.rotate(sensitivity*10, 0, 1, 0);
+            transform.rotate(sensitivity*2, 0, 1, 0);
         else if (dir == rYc)
-            transform.rotate(-sensitivity*10, 0, 1, 0);
+            transform.rotate(-sensitivity*2, 0, 1, 0);
         else if (dir == rZa)
-            transform.rotate(sensitivity*10, 0, 0, 1);
+            transform.rotate(sensitivity*2, 0, 0, 1);
         else if (dir == rZc)
-            transform.rotate(-sensitivity*10, 0, 0, 1);
+            transform.rotate(-sensitivity*2, 0, 0, 1);
 
 
     }

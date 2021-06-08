@@ -40,7 +40,7 @@ public:
     void readBackground(QString path);
     void saveResult(QString path);
     void modelTransform(QString modelName, modelOperation op, modelDirection dir);
-    void saveInfo(OpenGLSharedInfo& info);
+    void gatherInfo(OpenGLSharedInfo& info);    //对应distributeInfo，在下边
     void updateFrameTime();
     QSize getSize();
 
@@ -126,8 +126,12 @@ private:
     QOpenGLTexture* cubeMap;
     void loadCubeTexture();
 
-    //阴影强度
+    //阴影强度，不知道放在哪里好
     float shadowIntensity = 1.0;
+
+    //将info中的内容分发到下属的类，并与GUI同步
+    //否决：不需要与GUI同步，设置按钮手动同步。双向发消息会造成不必要的麻烦。
+    void distributeInfo();
 };
 
 #endif // WIDGET_H
